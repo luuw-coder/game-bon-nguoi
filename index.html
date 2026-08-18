@@ -5,76 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Cà Khịa Online</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 800px; background: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        h1 { text-align: center; color: #ff9800; margin-bottom: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #121212; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 600px; background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        h1 { text-align: center; color: #ff9800; margin-bottom: 25px; font-size: 28px; }
         .screen { display: none; }
         .screen.active { display: block; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #ccc; }
-        input[type="text"] { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: #ff9800; color: #000; }
-        .btn-primary:hover { background: #e68a00; }
-        .btn-secondary { background: #333; color: #fff; }
-        .btn-secondary:hover { background: #444; }
-        .lobby-info { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .key-display { font-size: 24px; font-weight: bold; color: #4caf50; letter-spacing: 2px; }
-        .chat-box { background: #111; border-radius: 8px; height: 200px; padding: 10px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .chat-msg { background: #222; padding: 6px 10px; border-radius: 4px; font-size: 14px; }
-        .chat-msg.system { color: #ffb74d; font-style: italic; background: transparent; }
-        .chat-input-group { display: flex; gap: 8px; }
+        input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; }
+        button { width: 100%; padding: 14px; margin-bottom: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-green { background: #4caf50; color: #fff; }
+        .btn-green:hover { background: #45a049; }
+        .btn-gray { background: #444; color: #fff; }
+        .btn-gray:hover { background: #555; }
+        .btn-orange { background: #ff9800; color: #000; }
+        .btn-orange:hover { background: #e68a00; }
+        .chat-box { background: #111; padding: 15px; border-radius: 6px; height: 250px; overflow-y: auto; margin-bottom: 15px; font-size: 15px; border: 1px solid #333; }
+        .chat-msg { margin-bottom: 8px; background: #222; padding: 8px 12px; border-radius: 6px; word-wrap: break-word; }
+        .system-msg { color: #ff9800; font-style: italic; background: transparent; padding: 0; }
+        .flex-row { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>GAME CÀ KHỊA ONLINE</h1>
+<div class="container">
+    <h1>GAME CÀ KHỊA ONLINE</h1>
 
-        <!-- MÀN HÌNH 1: ĐĂNG NHẬP & CHỌN PHÒNG -->
-        <div id="screen-login" class="screen active">
-            <div class="form-group">
-                <label for="nickname">Tên nhân vật (Nickname):</label>
-                <input type="text" id="nickname" placeholder="Nhập tên của bạn...">
-            </div>
-            <div class="form-group">
-                <label for="room-key-input">Key phòng (Nếu muốn vào phòng bạn bè):</label>
-                <input type="text" id="room-key-input" placeholder="VD: KHIA88">
-            </div>
-            <div class="btn-group">
-                <button id="btn-create-room" class="btn-primary">Tạo Phòng Mới</button>
-                <button id="btn-join-room" class="btn-secondary">Vào Phòng Bằng Key</button>
-            </div>
-        </div>
-
-        <!-- MÀN HÌNH 2: SẢNH CHỜ TRONG PHÒNG (LOBBY) -->
-        <div id="screen-lobby" class="screen">
-            <div class="lobby-info">
-                <div>
-                    <div>KEY PHÒNG CỦA BẠN:</div>
-                    <div id="display-room-key" class="key-display">------</div>
-                </div>
-                <div id="host-controls" style="display: none;">
-                    <button id="btn-start-game" class="btn-primary">BẮT ĐẦU GAME</button>
-                </div>
-            </div>
-
-            <!-- Khung Chat & Thông báo -->
-            <div id="chat-box" class="chat-box">
-                <div class="chat-msg system">[Hệ thống]: Chào mừng bạn đến với phòng chờ!</div>
-            </div>
-            <div class="chat-input-group">
-                <input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
-                <button id="btn-send-chat" class="btn-secondary" style="flex: 0 0 100px;">Gửi</button>
-            </div>
-        </div>
+    <!-- GIAO DIỆN 1: ĐĂNG NHẬP -->
+    <div id="login-screen" class="screen active">
+        <label style="color: #aaa; margin-bottom: 5px; display: block;">Tên nhân vật:</label>
+        <input type="text" id="nickname" placeholder="Ví dụ: Cậu Vàng...">
+        <button id="btn-create" class="btn-green">Tạo Phòng Mới</button>
+        
+        <label style="color: #aaa; margin-bottom: 5px; display: block; margin-top: 15px;">Mã Key phòng của bạn bè:</label>
+        <input type="text" id="room-key" placeholder="Nhập Key để vào...">
+        <button id="btn-join" class="btn-gray">Vào Phòng</button>
     </div>
 
-    <!-- NẠP CÁC FILE KẾT NỐI -->
-    <script src="mainRouter.js"></script>
-    <script src="uiLoader.js"></script>
+    <!-- GIAO DIỆN 2: SẢNH CHỜ PHÒNG -->
+    <div id="lobby-screen" class="screen">
+        <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 18px;">KEY PHÒNG: <strong id="display-key" style="color: #4caf50; letter-spacing: 3px; font-size: 22px;">---</strong></div>
+            <button id="btn-start" class="btn-orange" style="width: auto; margin: 0; padding: 10px 20px;">BẮT ĐẦU</button>
+        </div>
+        
+        <div class="chat-box" id="chat-box"></div>
+        
+        <div class="flex-row">
+            <input type="text" id="chat-input" placeholder="Chửi thề hoặc cà khịa..." style="margin: 0; flex: 1;">
+            <button id="btn-send" class="btn-gray" style="width: 90px; margin: 0;">Gửi</button>
+        </div>
+    </div>
+</div>
 
+<script>
+    // CODE LOGIC CHẠY GIAO DIỆN
+    const ui = {
+        login: document.getElementById('login-screen'),
+        lobby: document.getElementById('lobby-screen'),
+        nameInput: document.getElementById('nickname'),
+        keyInput: document.getElementById('room-key'),
+        chatInput: document.getElementById('chat-input')
+    };
+
+    // Bấm Tạo phòng
+    document.getElementById('btn-create').addEventListener('click', function() {
+        const name = ui.nameInput.value.trim();
+        if(!name) return alert("Vui lòng nhập tên nhân vật trước khi tạo phòng!");
+        
+        const randomKey = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        ui.login.classList.remove('active');
+        ui.lobby.classList.add('active');
+        document.getElementById('display-key').innerText = randomKey;
+        
+        addChat('Hệ thống', `[${name}] đã khởi tạo phòng thành công!`, true);
+    });
+
+    // Bấm Vào phòng
+    document.getElementById('btn-join').addEventListener('click', function() {
+        const name = ui.nameInput.value.trim();
+        const key = ui.keyInput.value.trim().toUpperCase();
+        
+        if(!name) return alert("Vui lòng nhập tên!");
+        if(!key) return alert("Vui lòng nhập Key phòng!");
+        
+        ui.login.classList.remove('active');
+        ui.lobby.classList.add('active');
+        document.getElementById('display-key').innerText = key;
+        document.getElementById('btn-start').style.display = 'none'; // Người chơi phụ không có nút Bắt đầu
+        
+        addChat('Hệ thống', `[${name}] đã lẻn vào phòng!`, true);
+    });
+
+    // Bấm Gửi Chat (hoặc nhấn Enter)
+    document.getElementById('btn-send').addEventListener('click', sendChat);
+    ui.chatInput.addEventListener('keypress', function(e) { if(e.key === 'Enter') sendChat(); });
+
+    function sendChat() {
+        const text = ui.chatInput.value.trim();
+        const name = ui.nameInput.value.trim();
+        if(text) {
+            addChat(name, text, false);
+            ui.chatInput.value = '';
+        }
+    }
+
+    // Hàm thêm tin nhắn lên khung chat
+    function addChat(sender, msg, isSystem) {
+        const box = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = 'chat-msg' + (isSystem ? ' system-msg' : '');
+        div.innerText = isSystem ? msg : `${sender}: ${msg}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
 </body>
 </html>
