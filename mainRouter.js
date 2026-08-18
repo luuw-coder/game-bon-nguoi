@@ -226,3 +226,25 @@
     console.log('%c[MainRouter]: Bộ móng Trung chuyển Toàn cục đã được khởi tạo thành công!', 'color: #00ff00; font-size: 14px; font-weight: bold;');
 
 })(window);
+/**
+ * MainRouter - Quản lý việc chuyển đổi giữa các màn hình (Screen Navigation)
+ */
+const MainRouter = {
+  // Hàm chuyển màn hình chính xác
+  showScreen(screenId) {
+    const screens = document.querySelectorAll('.screen');
+    
+    // Ẩn tất cả màn hình
+    screens.forEach(screen => {
+      screen.classList.remove('active');
+    });
+
+    // Hiện màn hình mục tiêu
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+      targetScreen.classList.add('active');
+    } else {
+      console.error("Không tìm thấy màn hình có ID:", screenId);
+    }
+  }
+};
