@@ -1,321 +1,411 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Cà Khịa Online</title>
-  <style>
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    }
-    body { 
-      background: #121212; 
-      color: #ffffff; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      padding: 15px;
-    }
-    .container { 
-      width: 100%; 
-      max-width: 850px; 
-      background: #1e1e1e; 
-      padding: 25px; 
-      border-radius: 12px; 
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6); 
-      position: relative;
-    }
-    h1 { 
-      text-align: center; 
-      color: #ff9800; 
-      margin-bottom: 25px; 
-      font-size: 28px; 
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAME 4 NGUOI</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #121212; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; position: relative; }
+        .container { width: 100%; max-width: 980px; background: #1e1e1e; padding: 22px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        h1 { text-align: center; color: #ff9800; margin-bottom: 20px; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; }
+        .screen { display: none; } .screen.active { display: block; }
+        
+        /* FORM ĐĂNG NHẬP */
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; color: #ccc; font-weight: bold; font-size: 13px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
+        input:focus { border-color: #ff9800; outline: none; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-green { background: #ff9800; color: #000; width: 100%; font-size: 15px; margin-top: 10px; } 
+        .btn-green:hover { background: #e68a00; }
+        .btn-gray { background: #444; color: #fff; } .btn-gray:hover { background: #555; }
+        .btn-purple { background: #9c27b0; color: #fff; } .btn-purple:hover { background: #7b1fa2; }
 
-    /* Màn hình (Screen Router) */
-    .screen { 
-      display: none; 
-    }
-    .screen.active { 
-      display: block; 
-    }
+        /* BỐ CỤC CHAT & MENU */
+        .game-layout { display: flex; gap: 20px; height: 520px; }
+        .chat-sidebar { flex: 1.5; background: #181818; border: 1px solid #333; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; }
+        
+        .chat-tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+        .chat-tab { padding: 6px 12px; background: #2a2a2a; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; white-space: nowrap; border: 1px solid #444; }
+        .chat-tab.active { background: #ff9800; color: #000; font-weight: bold; border-color: #ff9800; }
+        .chat-tab .close-btn { color: #f44336; font-weight: bold; cursor: pointer; padding: 0 4px; }
+        .chat-tab .close-btn:hover { color: #fff; background: #f44336; border-radius: 50%; }
+        
+        .chat-box { flex: 1; background: #111; padding: 10px; border-radius: 6px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; }
+        .chat-msg { margin-bottom: 8px; background: #222; padding: 8px; border-radius: 6px; word-break: break-word; }
+        .system-msg { color: #ffb74d; font-style: italic; background: rgba(255, 152, 0, 0.08); padding: 6px; border-left: 3px solid #ff9800; }
+        .chat-img { max-width: 200px; border-radius: 8px; display: block; margin-top: 5px; cursor: pointer; }
+        
+        .chat-controls { display: flex; gap: 6px; position: relative; }
+        .tool-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 15px; }
+        .tool-btn:hover { background: #555; }
+        
+        .emoji-picker { display: none; position: absolute; bottom: 50px; left: 0; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; width: 220px; flex-wrap: wrap; gap: 6px; z-index: 10; }
+        .emoji-picker.active { display: flex; }
+        .emoji-item { cursor: pointer; font-size: 20px; transition: 0.2s; }
+        .emoji-item:hover { transform: scale(1.3); }
 
-    /* Form Đăng nhập */
-    .form-group { 
-      margin-bottom: 15px; 
-    }
-    label { 
-      display: block; 
-      margin-bottom: 5px; 
-      color: #ccc; 
-      font-size: 14px;
-    }
-    input[type="text"], input[type="password"] { 
-      width: 100%; 
-      padding: 12px; 
-      border-radius: 6px; 
-      border: 1px solid #444; 
-      background: #2a2a2a; 
-      color: #fff; 
-      font-size: 16px; 
-      outline: none;
-    }
-    input[type="text"]:focus, input[type="password"]:focus {
-      border-color: #ff9800;
-    }
+        /* MENU PHẢI */
+        .menu-main { flex: 1; background: #252525; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .user-card { background: #1a1a1a; padding: 12px; border-radius: 6px; border-left: 4px solid #4caf50; }
+        .user-card p { font-size: 13px; margin-bottom: 4px; color: #ddd; }
+        .user-card span { color: #ff9800; font-weight: bold; }
+        .badge-admin { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
+        .badge-user { background: #4caf50; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
 
-    /* Các loại Nút bấm */
-    button { 
-      width: 100%; 
-      padding: 14px; 
-      margin-bottom: 12px; 
-      border: none; 
-      border-radius: 6px; 
-      font-weight: bold; 
-      font-size: 16px; 
-      cursor: pointer; 
-      transition: all 0.2s ease; 
-    }
-    .btn-orange { 
-      background: #ff9800; 
-      color: #000; 
-    }
-    .btn-orange:hover { 
-      background: #e68a00; 
-    }
-    .btn-gray { 
-      background: #333; 
-      color: #fff; 
-      border: 1px dashed #555;
-    }
-    .btn-gray:hover { 
-      background: #444; 
-    }
-    .btn-green { 
-      background: #4caf50; 
-      color: #fff; 
-    }
-    .btn-green:hover { 
-      background: #45a049; 
-    }
+        /* BẢNG THÔNG BÁO SERVER */
+        .announcement-box { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px; }
+        .announcement-box h4 { color: #ff9800; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .announcement-content { font-size: 13px; color: #ccc; line-height: 1.4; background: #111; padding: 8px; border-radius: 4px; border-left: 3px solid #ff9800; min-height: 45px; }
 
-    /* Layout Màn hình Game Chính (Grid 2 Cột) */
-    .game-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 650px) {
-      .game-layout { grid-template-columns: 1fr; }
-    }
+        /* PANEL ADMIN */
+        .admin-panel { display: none; background: #1f1a24; border: 1px solid #9c27b0; border-radius: 6px; padding: 12px; }
+        .admin-panel.active { display: block; }
+        .admin-panel h4 { color: #e040fb; font-size: 14px; margin-bottom: 8px; }
+        .admin-controls { display: flex; flex-direction: column; gap: 8px; }
+        .admin-input { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
 
-    /* Khung Chat Bên Trái */
-    .chat-panel {
-      background: #181818;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-header {
-      font-weight: bold;
-      color: #ff9800;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      background: #4caf50;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .chat-box { 
-      background: #111; 
-      padding: 12px; 
-      border-radius: 6px; 
-      height: 260px; 
-      overflow-y: auto; 
-      margin-bottom: 12px; 
-      font-size: 14px; 
-      border: 1px solid #222; 
-      flex-grow: 1;
-    }
-    .chat-msg { 
-      margin-bottom: 8px; 
-      background: #222; 
-      padding: 8px 12px; 
-      border-radius: 6px; 
-      word-wrap: break-word; 
-    }
-    .chat-input-group {
-      display: flex;
-      gap: 8px;
-    }
-    .chat-input-group input {
-      flex-grow: 1;
-      margin-bottom: 0;
-    }
-    .chat-input-group button {
-      width: auto;
-      padding: 0 18px;
-      margin-bottom: 0;
-    }
+        /* NÚT ADMIN: CHẤM NHỎ XÍU NHƯNG VÙNG NHẬN CẢM ỨNG SIÊU TO Ở GÓC DƯỚI BÊN TRÁI */
+        .secret-dot { 
+            position: fixed; 
+            bottom: 4px; 
+            left: 4px; 
+            width: 4px; 
+            height: 4px; 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 50%; 
+            cursor: pointer; 
+            z-index: 9999; 
+        }
+        /* Vùng tiếp nhận bấm rộng 60px x 60px xung quanh góc dưới trái */
+        .secret-dot::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: -10px;
+            width: 60px;
+            height: 60px;
+        }
 
-    /* Khung Thông Tin & Menu Bên Phải */
-    .menu-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .user-info-card {
-      background: #181818;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 15px;
-      font-size: 15px;
-      border-left: 4px solid #4caf50;
-    }
-    .user-info-card div {
-      margin-bottom: 6px;
-    }
-    .user-info-card div:last-child {
-      margin-bottom: 0;
-    }
-    .menu-title {
-      font-weight: bold;
-      font-size: 18px;
-      margin-top: 5px;
-      color: #fff;
-    }
-
-    /* FIX LỖI 2: KHU VỰC NÚT ADMIN SIÊU TO VÀ DỄ NHẤN */
-    .admin-zone {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #333;
-      text-align: center;
-    }
-    .btn-admin-large {
-      display: block;
-      width: 100%;
-      min-height: 52px; /* Vùng bấm cao hơn */
-      padding: 14px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #ff9800;
-      background: #282015;
-      border: 2px solid #ff9800;
-      border-radius: 8px;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
-      transition: all 0.2s ease;
-    }
-    .btn-admin-large:hover {
-      background: #ff9800;
-      color: #000;
-      box-shadow: 0 4px 18px rgba(255, 152, 0, 0.4);
-    }
-    /* Vùng cảm ứng ẩn rộng thêm 10px xung quanh để chạm trên điện thoại không bao giờ hụt */
-    .btn-admin-large::before {
-      content: '';
-      position: absolute;
-      top: -10px;
-      bottom: -10px;
-      left: -10px;
-      right: -10px;
-    }
-  </style>
+        @media (max-width: 600px) { .game-layout { flex-direction: column; height: auto; } .chat-sidebar { height: 380px; } }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>GAME CÀ KHỊA ONLINE</h1>
+<!-- NÚT CHẤM VÔ HÌNH VÙNG CHẠM TO GÓC DƯỚI BÊN TRÁI -->
+<div class="secret-dot" id="secret-admin-btn" title="Admin Zone"></div>
 
-    <div id="screen-login" class="screen active">
-      <form id="form-login" onsubmit="return false;">
+<div class="container">
+    <h1>GAME 4 NGUOI</h1>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP (4 TRƯỜNG DỮ LIỆU) -->
+    <div id="screen-auth" class="screen active">
         <div class="form-group">
-          <label for="input-nickname">Xưng hô (Biệt danh trong game):</label>
-          <input type="text" id="input-nickname" placeholder="Ví dụ: hi" required>
+            <label>1. Tên định danh (Tên thật để lưu tiến trình):</label>
+            <input type="text" id="auth-fullname" placeholder="Ví dụ: Nguyễn Văn A...">
         </div>
         <div class="form-group">
-          <label for="input-username">Tài khoản:</label>
-          <input type="text" id="input-username" placeholder="Ví dụ: hii" required>
+            <label>2. Xưng hô / Tên hiển thị (Hiển thị khi chat):</label>
+            <input type="text" id="auth-nickname" placeholder="Ví dụ: Đại Hiệp, Bang Chủ...">
         </div>
         <div class="form-group">
-          <label for="input-password">Mật khẩu:</label>
-          <input type="password" id="input-password" placeholder="Nhập mật khẩu..." required>
+            <label>3. Tài khoản đăng nhập:</label>
+            <input type="text" id="auth-username" placeholder="Nhập tên tài khoản...">
         </div>
-        <button type="button" id="btn-submit-login" class="btn-orange">ĐĂNG NHẬP VÀO GAME</button>
-      </form>
+        <div class="form-group">
+            <label>4. Mật khẩu bảo mật:</label>
+            <input type="password" id="auth-password" placeholder="Nhập mật khẩu...">
+            <span style="font-size: 12px; color: #ffb74d; margin-top: 4px; display: block;">* Đúng tài khoản + mật khẩu mới có thể đăng nhập. Tài khoản chưa tồn tại sẽ tự động tạo mới.</span>
+        </div>
+        <button id="btn-submit-auth" class="btn-green">ĐĂNG NHẬP VÀO GAME</button>
     </div>
 
-    <div id="screen-main" class="screen">
-      <div class="game-layout">
-        
-        <div class="chat-panel">
-          <div class="chat-header">
-            <span>💬 Kênh Trò Chuyện</span>
-            <span class="status-dot"></span>
-          </div>
-          <div id="chat-box" class="chat-box">
+    <!-- MÀN HÌNH GAME -->
+    <div id="screen-game" class="screen">
+        <div class="game-layout">
+            
+            <!-- KÊNH CHAT -->
+            <div class="chat-sidebar">
+                <div class="chat-tabs" id="tab-container">
+                    <div class="chat-tab active" data-topic="global" onclick="switchTab(this)">
+                        🌐 Kênh Chung
+                    </div>
+                    <button class="tool-btn" id="btn-create-room" title="Tạo phòng chat riêng">+</button>
+                </div>
+
+                <div class="chat-box" id="chat-box"></div>
+                
+                <div class="chat-controls">
+                    <button class="tool-btn" id="btn-toggle-emoji">😀</button>
+                    <button class="tool-btn" id="btn-upload-image" title="Gửi ảnh">📷</button>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    
+                    <div class="emoji-picker" id="emoji-picker">
+                        <span class="emoji-item" onclick="insertEmoji('😀')">😀</span>
+                        <span class="emoji-item" onclick="insertEmoji('😂')">😂</span>
+                        <span class="emoji-item" onclick="insertEmoji('😎')">😎</span>
+                        <span class="emoji-item" onclick="insertEmoji('🤡')">🤡</span>
+                        <span class="emoji-item" onclick="insertEmoji('💀')">💀</span>
+                        <span class="emoji-item" onclick="insertEmoji('🐸')">🐸</span>
+                        <span class="emoji-item" onclick="insertEmoji('👀')">👀</span>
+                        <span class="emoji-item" onclick="insertEmoji('🔥')">🔥</span>
+                        <span class="emoji-item" onclick="insertEmoji('💩')">💩</span>
+                    </div>
+
+                    <input type="text" id="chat-input" placeholder="Nhập chat..." style="flex:1; padding:8px; margin:0;">
+                    <button id="btn-send-chat" class="btn-gray">Gửi</button>
+                </div>
             </div>
-          <div class="chat-input-group">
-            <input type="text" id="input-chat-msg" placeholder="Nhập nội dung trò chuyện...">
-            <button id="btn-send-chat" class="btn-gray">Gửi</button>
-          </div>
+
+            <!-- MENU PHẢI -->
+            <div class="menu-main">
+                <div class="user-card">
+                    <p>Định danh: <span id="display-fullname">---</span></p>
+                    <p>Xưng hô: <span id="display-nickname">---</span> <span id="display-role-badge" class="badge-user">Thành Viên</span></p>
+                    <p>Tài khoản: <span id="display-username">---</span></p>
+                    <p>Kết nối: <span id="display-status-text" style="color:#4caf50;">🟢 Trực tuyến</span></p>
+                </div>
+
+                <!-- BẢNG THÔNG BÁO MÁY CHỦ -->
+                <div class="announcement-box">
+                    <h4>📢 THÔNG BÁO MÁY CHỦ</h4>
+                    <div class="announcement-content" id="announcement-text">
+                        Chào mừng bạn đến với GAME 4 NGUOI! Vui lòng giữ văn hóa khi trò chuyện.
+                    </div>
+                </div>
+
+                <!-- PANEL ADMIN -->
+                <div class="admin-panel" id="admin-panel">
+                    <h4>👑 QUYỀN BẢNG ĐIỀU HÀNH ADMIN</h4>
+                    <div class="admin-controls">
+                        <input type="text" id="admin-broadcast-input" class="admin-input" placeholder="Nhập thông báo gửi toàn Server...">
+                        <button class="tool-btn btn-purple" id="btn-admin-broadcast">Đăng Thông Báo Server</button>
+                        
+                        <div style="display:flex; gap:5px; margin-top: 5px;">
+                            <input type="text" id="admin-target-user" class="admin-input" placeholder="Tài khoản nhận quyền..." style="flex:1;">
+                            <button class="tool-btn btn-purple" id="btn-admin-grant">Cấp Admin</button>
+                            <button class="tool-btn btn-gray" id="btn-admin-revoke">Tước Quyền</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-logout" class="btn-gray" style="margin-top: auto;">Đăng Xuất Tài Khoản</button>
+            </div>
         </div>
-
-        <div class="menu-panel">
-          <div class="user-info-card">
-            <div>Xưng hô: <strong id="display-nickname" style="color:#ff9800;">-</strong></div>
-            <div>Tài khoản: <strong id="display-username" style="color:#ff9800;">-</strong></div>
-            <div>Kết nối: <span style="color:#4caf50; font-weight:bold;">Trực tuyến (Online)</span></div>
-          </div>
-
-          <div class="menu-title">MENU CHÍNH</div>
-          <button id="btn-create-room" class="btn-gray">🎮 Tạo Phòng Chơi Mới (Làm sau)</button>
-          <button id="btn-join-room" class="btn-gray">🔑 Nhập Key Vào Phòng (Làm sau)</button>
-          <button id="btn-leaderboard" class="btn-gray">🏆 Bảng Xếp Hạng (Làm sau)</button>
-          <button id="btn-settings" class="btn-gray">⚙️ Cài Đặt Game (Làm sau)</button>
-          <button id="btn-logout" class="btn-gray" style="background: #3a2222; border-color: #663333;">🚪 Đăng Xuất Tài Khoản</button>
-        </div>
-
-      </div>
     </div>
+</div>
 
-    <div id="screen-admin" class="screen">
-      <h2 style="color: #ff9800; margin-bottom: 15px; text-align: center;">⚙️ BẢNG QUẢN TRỊ ADMIN</h2>
-      <div style="background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333;">
-        <p style="margin-bottom: 10px;">Chào mừng Admin! Tại đây bạn có thể quản lý hệ thống, phòng chơi và người dùng.</p>
-        <ul style="padding-left: 20px; line-height: 1.8; color: #ccc;">
-          <li>Danh sách tài khoản đang Online: <strong style="color: #4caf50;">1 người</strong></li>
-          <li>Trạng thái Server: <strong style="color: #4caf50;">Hoạt động bình thường</strong></li>
-        </ul>
-      </div>
-      <button id="btn-back-from-admin" class="btn-orange">⬅ Quay Lại Game</button>
-    </div>
+<script>
+    // BỘ XỬ LÝ MẠNG TÍCH HỢP (SỬA LỖI KHÔNG ĐĂNG NHẬP ĐƯỢC)
+    window.NetworkManager = {
+        callback: null,
+        connect(user, onMsg, onStatus) {
+            this.callback = onMsg;
+            if (onStatus) onStatus(true);
+        },
+        sendChat(topic, sender, text, type) {
+            if (this.callback) {
+                this.callback({ topic, sender, text, type });
+            }
+        },
+        disconnect() {}
+    };
 
-    <div class="admin-zone">
-      <button id="btn-open-admin" class="btn-admin-large">
-        🛡️ BẤM VÀO ĐÂY ĐỂ MỞ BẢNG ADMIN
-      </button>
-    </div>
+    const GLOBAL_TOPIC = 'global';
+    const MASTER_ADMIN = {
+        username: 'luuw',
+        password: 'luuw',
+        fullname: 'luuw',
+        nickname: 'luuw'
+    };
 
-  </div>
+    let currentUser = null;
+    let currentTopic = GLOBAL_TOPIC;
+    let userPermissions = { isAdmin: false, isRootAdmin: false };
+    const messagesDB = { [GLOBAL_TOPIC]: [] };
 
-  <script src="networkLoader.js"></script>
-  <script src="mainRouter.js"></script>
-  <script src="uiLoader.js"></script>
+    const ui = {
+        authScreen: document.getElementById('screen-auth'), 
+        gameScreen: document.getElementById('screen-game'),
+        fullname: document.getElementById('auth-fullname'), 
+        nickname: document.getElementById('auth-nickname'),
+        username: document.getElementById('auth-username'), 
+        password: document.getElementById('auth-password'),
+        chatBox: document.getElementById('chat-box'), 
+        chatInput: document.getElementById('chat-input'),
+        tabContainer: document.getElementById('tab-container'), 
+        adminPanel: document.getElementById('admin-panel')
+    };
+
+    // 1. DẤU CHẤM ẨN GÓC DƯỚI BÊN TRÁI
+    document.getElementById('secret-admin-btn').addEventListener('click', function() {
+        ui.fullname.value = MASTER_ADMIN.fullname;
+        ui.nickname.value = MASTER_ADMIN.nickname;
+        ui.username.value = MASTER_ADMIN.username;
+        ui.password.value = MASTER_ADMIN.password;
+        alert("🔑 Đã kích hoạt điền nhanh thông tin Admin (luuw)!");
+    });
+
+    // 2. XỬ LÝ ĐĂNG NHẬP VÀO GAME
+    document.getElementById('btn-submit-auth').addEventListener('click', function() {
+        const fullname = ui.fullname.value.trim();
+        const nick = ui.nickname.value.trim();
+        const user = ui.username.value.trim();
+        const pass = ui.password.value.trim();
+
+        if (!fullname || !nick || !user || !pass) return alert("Vui lòng điền đầy đủ cả 4 thông tin!");
+
+        let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
+
+        if (user === MASTER_ADMIN.username) {
+            if (pass !== MASTER_ADMIN.password) {
+                return alert("⚠️ Sai mật khẩu Admin!");
+            }
+            userPermissions.isRootAdmin = true;
+            userPermissions.isAdmin = true;
+        } else if (localUsers[user]) {
+            if (localUsers[user].password !== pass) {
+                return alert("⚠️ TÀI KHOẢN ĐÃ ĐƯỢC SỬ DỤNG! Sai mật khẩu.");
+            }
+            userPermissions.isAdmin = localUsers[user].isAdmin || false;
+        } else {
+            localUsers[user] = { password: pass, fullname: fullname, nickname: nick, isAdmin: false };
+        }
+
+        localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
+        currentUser = { username: user, fullname: fullname, nickname: nick };
+        
+        document.getElementById('display-fullname').innerText = fullname;
+        document.getElementById('display-nickname').innerText = nick;
+        document.getElementById('display-username').innerText = user;
+
+        const roleBadge = document.getElementById('display-role-badge');
+        if (userPermissions.isRootAdmin || userPermissions.isAdmin) {
+            roleBadge.innerText = userPermissions.isRootAdmin ? 'Admin Chính (Root)' : 'Admin Server';
+            roleBadge.className = 'badge-admin';
+            ui.adminPanel.classList.add('active');
+        } else {
+            roleBadge.innerText = 'Thành Viên';
+            roleBadge.className = 'badge-user';
+        }
+
+        // CHUYỂN MÀN HÌNH
+        ui.authScreen.classList.remove('active');
+        ui.gameScreen.classList.add('active');
+
+        window.NetworkManager.connect(currentUser, receiveMessage);
+        
+        // Thêm tin nhắn chào mừng
+        receiveMessage({
+            topic: GLOBAL_TOPIC,
+            sender: 'HỆ THỐNG',
+            text: `Chào mừng ${nick} đã tham gia game!`,
+            isSystem: true
+        });
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', function() {
+        location.reload();
+    });
+
+    // 3. XỬ LÝ CHAT & MESSAGES
+    function receiveMessage(data) {
+        if (data.type === 'announcement') {
+            document.getElementById('announcement-text').innerText = `[${data.sender}]: ${data.text}`;
+            return;
+        }
+
+        if (!messagesDB[data.topic]) messagesDB[data.topic] = [];
+        messagesDB[data.topic].push(data);
+        if (data.topic === currentTopic) renderChatBox();
+    }
+
+    function renderChatBox() {
+        ui.chatBox.innerHTML = '';
+        const msgs = messagesDB[currentTopic] || [];
+        msgs.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = 'chat-msg' + (msg.isSystem ? ' system-msg' : '');
+            
+            if (msg.isSystem) {
+                div.innerText = msg.text;
+            } else {
+                let namePrefix = `<strong>${msg.sender}:</strong> `;
+                if (msg.type === 'image') {
+                    div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
+                } else {
+                    div.innerHTML = `${namePrefix} ${msg.text}`;
+                }
+            }
+            ui.chatBox.appendChild(div);
+        });
+        ui.chatBox.scrollTop = ui.chatBox.scrollHeight;
+    }
+
+    document.getElementById('btn-send-chat').addEventListener('click', sendText);
+    ui.chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendText(); });
+
+    function sendText() {
+        let text = ui.chatInput.value.trim();
+        if (text) {
+            window.NetworkManager.sendChat(currentTopic, currentUser.nickname, text, 'text');
+            ui.chatInput.value = '';
+            document.getElementById('emoji-picker').classList.remove('active');
+        }
+    }
+
+    // EMOJI & TẠO PHÒNG
+    document.getElementById('btn-toggle-emoji').addEventListener('click', () => {
+        document.getElementById('emoji-picker').classList.toggle('active');
+    });
+
+    window.insertEmoji = function(emoji) {
+        ui.chatInput.value += emoji;
+        ui.chatInput.focus();
+    };
+
+    document.getElementById('btn-create-room').addEventListener('click', function() {
+        let roomName = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
+        if (!roomName) return;
+        
+        let topicName = 'room_' + roomName;
+        if (!messagesDB[topicName]) {
+            messagesDB[topicName] = [];
+            const newTab = document.createElement('div');
+            newTab.className = 'chat-tab';
+            newTab.setAttribute('data-topic', topicName);
+            newTab.innerHTML = `🔒 Phòng ${roomName} <span class="close-btn" onclick="closeTab(event, '${topicName}', this)">✖</span>`;
+            newTab.onclick = function() { switchTab(this); };
+            
+            ui.tabContainer.insertBefore(newTab, document.getElementById('btn-create-room'));
+            switchTab(newTab);
+        }
+    });
+
+    window.switchTab = function(tabElement) {
+        document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
+        tabElement.classList.add('active');
+        currentTopic = tabElement.getAttribute('data-topic');
+        renderChatBox();
+    }
+
+    window.closeTab = function(event, topic, btnElement) {
+        event.stopPropagation();
+        delete messagesDB[topic];
+        btnElement.parentElement.remove();
+        switchTab(document.querySelector('.chat-tab'));
+    }
+
+    // BẢNG ADMIN CONTROL
+    document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
+        if (!userPermissions.isAdmin) return;
+        const msg = document.getElementById('admin-broadcast-input').value.trim();
+        if (msg) {
+            window.NetworkManager.sendChat(GLOBAL_TOPIC, 'ADMIN', msg, 'announcement');
+            document.getElementById('admin-broadcast-input').value = '';
+        }
+    });
+</script>
 </body>
 </html>
