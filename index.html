@@ -157,7 +157,7 @@
                     </div>
                 </div>
 
-                <!-- PANEL ADMIN (Chỉ Admin mới thấy) -->
+                <!-- PANEL ADMIN -->
                 <div class="admin-panel" id="admin-panel">
                     <h4>👑 QUYỀN BẢNG ĐIỀU HÀNH ADMIN</h4>
                     <div class="admin-controls">
@@ -185,7 +185,7 @@
     const GLOBAL_TOPIC = 'game4nguoi_2026/global';
     const SYSTEM_ANNOUNCE_TOPIC = 'game4nguoi_2026/system_announcement';
     
-    // TÀI KHOẢN ADMIN CHÍNH (ROOT ADMIN): Luôn sở hữu quyền cao nhất
+    // TÀI KHOẢN ADMIN CHÍNH
     const MASTER_ADMIN = {
         username: 'luuw',
         password: 'luuw',
@@ -225,10 +225,8 @@
 
         if (!fullname || !nick || !user || !pass) return alert("Vui lòng điền đầy đủ 4 thông tin!");
 
-        // Lấy DB tài khoản từ LocalStorage
         let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
 
-        // Kiếm tra xem có phải Đăng nhập Admin Chính không
         if (user === MASTER_ADMIN.username) {
             if (pass !== MASTER_ADMIN.password || fullname !== MASTER_ADMIN.fullname) {
                 return alert("⚠️ Sai mật khẩu hoặc Tên định danh của Admin Chính!");
@@ -236,24 +234,19 @@
             userPermissions.isRootAdmin = true;
             userPermissions.isAdmin = true;
         } else if (localUsers[user]) {
-            // Tài khoản đã tồn tại -> Kiểm tra mật khẩu
             if (localUsers[user].password !== pass) {
                 return alert("⚠️ TÀI KHOẢN ĐÃ ĐƯỢC SỬ DỤNG! Mật khẩu bạn nhập không chính xác.");
             }
-            // Mật khẩu đúng -> Đăng nhập & Lấy quyền
             userPermissions.isAdmin = localUsers[user].isAdmin || false;
             localUsers[user].fullname = fullname;
             localUsers[user].nickname = nick;
         } else {
-            // Tài khoản chưa tồn tại -> Đăng ký tài khoản mới
             localUsers[user] = { password: pass, fullname: fullname, nickname: nick, isAdmin: false };
         }
 
-        // Lưu lại DB
         localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
         currentUser = { username: user, fullname: fullname, nickname: nick };
         
-        // Hiển thị thông tin người dùng
         document.getElementById('display-fullname').innerText = fullname;
         document.getElementById('display-nickname').innerText = nick;
         document.getElementById('display-username').innerText = user;
@@ -275,25 +268,18 @@
         ui.authScreen.classList.remove('active');
         ui.gameScreen.classList.add('active');
 
-        // Kết nối mạng
-window.NetworkManager.connect(
-    currentUser,
-    receiveMessage,
-    (isOnline) => { 
-        document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
-        // Thêm đoạn này để tự động vào đúng kênh chung khi kết nối thành công:
-        if(isOnline) {
-            window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
-        }
-    }
-);
-
-        // Đăng ký nhận thông báo hệ thống
-        setTimeout(() => {
-            if (window.NetworkManager.joinRoom) {
-                window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
+        // Kết nối mạng & tự động tham gia Kênh Chung + Kênh Thông Báo
+        window.NetworkManager.connect(
+            currentUser,
+            receiveMessage,
+            (isOnline) => { 
+                document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
+                if(isOnline) {
+                    window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
+                    window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
+                }
             }
-        }, 1000);
+        );
     });
 
     document.getElementById('btn-logout').addEventListener('click', function() {
@@ -301,7 +287,7 @@ window.NetworkManager.connect(
         location.reload();
     });
 
-    // 3. TÍNH NĂNG ADMIN (ĐĂNG THÔNG BÁO & CẤP QUYỀN)
+    // 3. TÍNH NĂNG ADMIN
     document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
         if (!userPermissions.isAdmin) return;
         const msg = document.getElementById('admin-broadcast-input').value.trim();
@@ -331,7 +317,6 @@ window.NetworkManager.connect(
         const targetUser = document.getElementById('admin-target-user').value.trim();
         if (!targetUser) return;
 
-        // BẢO VỆ ADMIN CHÍNH: Không ai có thể tước quyền của luuw
         if (targetUser === MASTER_ADMIN.username) {
             return alert("⛔ KHÔNG THỂ TƯỚC QUYỀN CỦA ADMIN CHÍNH (luuw)!");
         }
@@ -344,7 +329,7 @@ window.NetworkManager.connect(
         }
     });
 
-    // 4. QUẢN LÝ TABS PHÒNG CHAT & NHẬN TIN NHẮN
+    // 4. QUẢN LÝ PHÒNG CHAT & NHẬN TIN NHẮN
     document.getElementById('btn-create-room').addEventListener('click', function() {
         let roomName = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
         if (!roomName) return;
@@ -382,7 +367,6 @@ window.NetworkManager.connect(
     }
 
     function receiveMessage(data) {
-        // Nếu là thông báo hệ thống toàn Server
         if (data.type === 'announcement' || data.topic === SYSTEM_ANNOUNCE_TOPIC) {
             document.getElementById('announcement-text').innerText = `[${data.sender}]: ${data.text}`;
             return;
