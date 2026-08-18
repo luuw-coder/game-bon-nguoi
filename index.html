@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cà Khịa Online</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; background: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #ff9800; margin-bottom: 20px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #ccc; }
+        input[type="text"] { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #ff9800; color: #000; }
+        .btn-primary:hover { background: #e68a00; }
+        .btn-secondary { background: #333; color: #fff; }
+        .btn-secondary:hover { background: #444; }
+        .lobby-info { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .key-display { font-size: 24px; font-weight: bold; color: #4caf50; letter-spacing: 2px; }
+        .chat-box { background: #111; border-radius: 8px; height: 200px; padding: 10px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .chat-msg { background: #222; padding: 6px 10px; border-radius: 4px; font-size: 14px; }
+        .chat-msg.system { color: #ffb74d; font-style: italic; background: transparent; }
+        .chat-input-group { display: flex; gap: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>GAME CÀ KHỊA ONLINE</h1>
+
+        <!-- MÀN HÌNH 1: ĐĂNG NHẬP & CHỌN PHÒNG -->
+        <div id="screen-login" class="screen active">
+            <div class="form-group">
+                <label for="nickname">Tên nhân vật (Nickname):</label>
+                <input type="text" id="nickname" placeholder="Nhập tên của bạn...">
+            </div>
+            <div class="form-group">
+                <label for="room-key-input">Key phòng (Nếu muốn vào phòng bạn bè):</label>
+                <input type="text" id="room-key-input" placeholder="VD: KHIA88">
+            </div>
+            <div class="btn-group">
+                <button id="btn-create-room" class="btn-primary">Tạo Phòng Mới</button>
+                <button id="btn-join-room" class="btn-secondary">Vào Phòng Bằng Key</button>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH 2: SẢNH CHỜ TRONG PHÒNG (LOBBY) -->
+        <div id="screen-lobby" class="screen">
+            <div class="lobby-info">
+                <div>
+                    <div>KEY PHÒNG CỦA BẠN:</div>
+                    <div id="display-room-key" class="key-display">------</div>
+                </div>
+                <div id="host-controls" style="display: none;">
+                    <button id="btn-start-game" class="btn-primary">BẮT ĐẦU GAME</button>
+                </div>
+            </div>
+
+            <!-- Khung Chat & Thông báo -->
+            <div id="chat-box" class="chat-box">
+                <div class="chat-msg system">[Hệ thống]: Chào mừng bạn đến với phòng chờ!</div>
+            </div>
+            <div class="chat-input-group">
+                <input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
+                <button id="btn-send-chat" class="btn-secondary" style="flex: 0 0 100px;">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NẠP CÁC FILE KẾT NỐI -->
+    <script src="mainRouter.js"></script>
+    <script src="uiLoader.js"></script>
+
+</body>
+</html>
