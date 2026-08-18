@@ -276,11 +276,17 @@
         ui.gameScreen.classList.add('active');
 
         // Kết nối mạng
-        window.NetworkManager.connect(
-            currentUser,
-            receiveMessage,
-            (isOnline) => { document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối'; }
-        );
+window.NetworkManager.connect(
+    currentUser,
+    receiveMessage,
+    (isOnline) => { 
+        document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
+        // Thêm đoạn này để tự động vào đúng kênh chung khi kết nối thành công:
+        if(isOnline) {
+            window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
+        }
+    }
+);
 
         // Đăng ký nhận thông báo hệ thống
         setTimeout(() => {
