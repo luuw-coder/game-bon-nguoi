@@ -66,7 +66,7 @@
         .admin-controls { display: flex; flex-direction: column; gap: 8px; }
         .admin-input { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
 
-        /* NÚT ADMIN: CHẤM NHỎ XÍU NHƯNG VÙNG NHẬN CẢM ỨNG SIÊU TO Ở GÓC DƯỚI BÊN TRÁI */
+        /* NÚT ADMIN: CHẤM MỜ SIÊU NHỎ NHƯNG VÙNG NHẬN CẢM ỨNG 60px x 60px Ở GÓC DƯỚI BÊN TRÁI */
         .secret-dot { 
             position: fixed; 
             bottom: 4px; 
@@ -78,7 +78,7 @@
             cursor: pointer; 
             z-index: 9999; 
         }
-        /* Vùng tiếp nhận bấm rộng 60px x 60px xung quanh góc dưới trái */
+        /* Mở rộng vùng bấm cảm ứng xung quanh */
         .secret-dot::before {
             content: '';
             position: absolute;
@@ -93,13 +93,13 @@
 </head>
 <body>
 
-<!-- NÚT CHẤM VÔ HÌNH VÙNG CHẠM TO GÓC DƯỚI BÊN TRÁI -->
+<!-- NÚT CHẤM VÔ HÌNH VÙNG CHẠM RỘNG GÓC DƯỚI BÊN TRÁI -->
 <div class="secret-dot" id="secret-admin-btn" title="Admin Zone"></div>
 
 <div class="container">
     <h1>GAME 4 NGUOI</h1>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP (4 TRƯỜNG DỮ LIỆU) -->
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="screen-auth" class="screen active">
         <div class="form-group">
             <label>1. Tên định danh (Tên thật để lưu tiến trình):</label>
@@ -197,7 +197,7 @@
 </div>
 
 <script>
-    // BỘ XỬ LÝ MẠNG TÍCH HỢP (SỬA LỖI KHÔNG ĐĂNG NHẬP ĐƯỢC)
+    // BỘ XỬ LÝ MẠNG TÍCH HỢP SẴN (ĐẢM BẢO CHUYỂN MÀN HÌNH MƯỢT MÀ)
     window.NetworkManager = {
         callback: null,
         connect(user, onMsg, onStatus) {
@@ -238,16 +238,16 @@
         adminPanel: document.getElementById('admin-panel')
     };
 
-    // 1. DẤU CHẤM ẨN GÓC DƯỚI BÊN TRÁI
+    // 1. NHẤN VÀO GÓC DƯỚI BÊN TRÁI ĐỂ ĐIỀN NHANH ADMIN
     document.getElementById('secret-admin-btn').addEventListener('click', function() {
         ui.fullname.value = MASTER_ADMIN.fullname;
         ui.nickname.value = MASTER_ADMIN.nickname;
         ui.username.value = MASTER_ADMIN.username;
         ui.password.value = MASTER_ADMIN.password;
-        alert("🔑 Đã kích hoạt điền nhanh thông tin Admin (luuw)!");
+        alert("🔑 Đã điền nhanh tài khoản Admin (luuw)!");
     });
 
-    // 2. XỬ LÝ ĐĂNG NHẬP VÀO GAME
+    // 2. XỬ LÝ NÚT ĐĂNG NHẬP VÀO GAME
     document.getElementById('btn-submit-auth').addEventListener('click', function() {
         const fullname = ui.fullname.value.trim();
         const nick = ui.nickname.value.trim();
@@ -266,7 +266,7 @@
             userPermissions.isAdmin = true;
         } else if (localUsers[user]) {
             if (localUsers[user].password !== pass) {
-                return alert("⚠️ TÀI KHOẢN ĐÃ ĐƯỢC SỬ DỤNG! Sai mật khẩu.");
+                return alert("⚠️ TÀI KHOẢN ĐÃ TỒN TẠI! Sai mật khẩu.");
             }
             userPermissions.isAdmin = localUsers[user].isAdmin || false;
         } else {
@@ -290,13 +290,12 @@
             roleBadge.className = 'badge-user';
         }
 
-        // CHUYỂN MÀN HÌNH
+        // THỰC HIỆN CHUYỂN MÀN HÌNH SANG GAME
         ui.authScreen.classList.remove('active');
         ui.gameScreen.classList.add('active');
 
         window.NetworkManager.connect(currentUser, receiveMessage);
         
-        // Thêm tin nhắn chào mừng
         receiveMessage({
             topic: GLOBAL_TOPIC,
             sender: 'HỆ THỐNG',
@@ -309,7 +308,7 @@
         location.reload();
     });
 
-    // 3. XỬ LÝ CHAT & MESSAGES
+    // 3. XỬ LÝ TIN NHẮN
     function receiveMessage(data) {
         if (data.type === 'announcement') {
             document.getElementById('announcement-text').innerText = `[${data.sender}]: ${data.text}`;
@@ -397,7 +396,7 @@
         switchTab(document.querySelector('.chat-tab'));
     }
 
-    // BẢNG ADMIN CONTROL
+    // PANEL ADMIN
     document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
         if (!userPermissions.isAdmin) return;
         const msg = document.getElementById('admin-broadcast-input').value.trim();
