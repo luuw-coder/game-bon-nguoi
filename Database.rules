@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      "$username": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['password', 'fullname', 'nickname'])"
+      }
+    },
+    "kicks": {
+      ".read": true,
+      ".write": true,
+      "$sessionId": {
+        ".validate": "newData.isBoolean()"
+      }
+    }
+  }
+}
