@@ -17,8 +17,8 @@
         input[type="text"], input[type="password"] { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
         input:focus { border-color: #ff9800; outline: none; }
         button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-green { background: #ff9800; color: #000; width: 100%; font-size: 15px; margin-top: 10px; } 
-        .btn-green:hover { background: #e68a00; }
+        .btn-green { background: #4caf50; color: #fff; width: 100%; font-size: 15px; margin-top: 10px; } 
+        .btn-green:hover { background: #45a049; }
         .btn-gray { background: #444; color: #fff; } .btn-gray:hover { background: #555; }
         .btn-purple { background: #9c27b0; color: #fff; } .btn-purple:hover { background: #7b1fa2; }
 
@@ -66,35 +66,17 @@
         .admin-controls { display: flex; flex-direction: column; gap: 8px; }
         .admin-input { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
 
-        /* NÚT ADMIN: CHẤM MỜ SIÊU NHỎ NHƯNG VÙNG NHẬN CẢM ỨNG 60px x 60px Ở GÓC DƯỚI BÊN TRÁI */
-        .secret-dot { 
-            position: fixed; 
-            bottom: 4px; 
-            left: 4px; 
-            width: 4px; 
-            height: 4px; 
-            background: rgba(255, 255, 255, 0.2); 
-            border-radius: 50%; 
-            cursor: pointer; 
-            z-index: 9999; 
-        }
-        /* Mở rộng vùng bấm cảm ứng xung quanh */
-        .secret-dot::before {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: -10px;
-            width: 60px;
-            height: 60px;
-        }
+        /* DẤU CHẤM ẨN BÍ MẬT GÓC DƯỚI BÊN TRÁI */
+        .secret-dot { position: fixed; bottom: 6px; left: 6px; width: 6px; height: 6px; background: #ffffff; opacity: 0.15; border-radius: 50%; cursor: pointer; transition: 0.3s; z-index: 9999; }
+        .secret-dot:hover { opacity: 1; background: #e040fb; box-shadow: 0 0 10px #e040fb; }
 
         @media (max-width: 600px) { .game-layout { flex-direction: column; height: auto; } .chat-sidebar { height: 380px; } }
     </style>
 </head>
 <body>
 
-<!-- NÚT CHẤM VÔ HÌNH VÙNG CHẠM RỘNG GÓC DƯỚI BÊN TRÁI -->
-<div class="secret-dot" id="secret-admin-btn" title="Admin Zone"></div>
+<!-- DẤU CHẤM ẨN BÍ MẬT -->
+<div class="secret-dot" id="secret-admin-btn" title="Chế độ Quản Trị Viên"></div>
 
 <div class="container">
     <h1>GAME 4 NGUOI</h1>
@@ -128,7 +110,7 @@
             <!-- KÊNH CHAT -->
             <div class="chat-sidebar">
                 <div class="chat-tabs" id="tab-container">
-                    <div class="chat-tab active" data-topic="global" onclick="switchTab(this)">
+                    <div class="chat-tab active" data-topic="game4nguoi_2026/global" onclick="switchTab(this)">
                         🌐 Kênh Chung
                     </div>
                     <button class="tool-btn" id="btn-create-room" title="Tạo phòng chat riêng">+</button>
@@ -153,7 +135,7 @@
                         <span class="emoji-item" onclick="insertEmoji('💩')">💩</span>
                     </div>
 
-                    <input type="text" id="chat-input" placeholder="Nhập chat..." style="flex:1; padding:8px; margin:0;">
+                    <input type="text" id="chat-input" placeholder="Nhập chat hoặc Ctrl+V dán ảnh..." style="flex:1; padding:8px; margin:0;">
                     <button id="btn-send-chat" class="btn-gray">Gửi</button>
                 </div>
             </div>
@@ -164,7 +146,7 @@
                     <p>Định danh: <span id="display-fullname">---</span></p>
                     <p>Xưng hô: <span id="display-nickname">---</span> <span id="display-role-badge" class="badge-user">Thành Viên</span></p>
                     <p>Tài khoản: <span id="display-username">---</span></p>
-                    <p>Kết nối: <span id="display-status-text" style="color:#4caf50;">🟢 Trực tuyến</span></p>
+                    <p>Kết nối: <span id="display-status-text" style="color:#ffb74d;">Đang kết nối...</span></p>
                 </div>
 
                 <!-- BẢNG THÔNG BÁO MÁY CHỦ -->
@@ -175,7 +157,7 @@
                     </div>
                 </div>
 
-                <!-- PANEL ADMIN -->
+                <!-- PANEL ADMIN (Chỉ Admin mới thấy) -->
                 <div class="admin-panel" id="admin-panel">
                     <h4>👑 QUYỀN BẢNG ĐIỀU HÀNH ADMIN</h4>
                     <div class="admin-controls">
@@ -196,23 +178,14 @@
     </div>
 </div>
 
-<script>
-    // BỘ XỬ LÝ MẠNG TÍCH HỢP SẴN (ĐẢM BẢO CHUYỂN MÀN HÌNH MƯỢT MÀ)
-    window.NetworkManager = {
-        callback: null,
-        connect(user, onMsg, onStatus) {
-            this.callback = onMsg;
-            if (onStatus) onStatus(true);
-        },
-        sendChat(topic, sender, text, type) {
-            if (this.callback) {
-                this.callback({ topic, sender, text, type });
-            }
-        },
-        disconnect() {}
-    };
+<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+<script src="networkLoader.js"></script>
 
-    const GLOBAL_TOPIC = 'global';
+<script>
+    const GLOBAL_TOPIC = 'game4nguoi_2026/global';
+    const SYSTEM_ANNOUNCE_TOPIC = 'game4nguoi_2026/system_announcement';
+    
+    // TÀI KHOẢN ADMIN CHÍNH (ROOT ADMIN): Luôn sở hữu quyền cao nhất
     const MASTER_ADMIN = {
         username: 'luuw',
         password: 'luuw',
@@ -223,66 +196,75 @@
     let currentUser = null;
     let currentTopic = GLOBAL_TOPIC;
     let userPermissions = { isAdmin: false, isRootAdmin: false };
+    
     const messagesDB = { [GLOBAL_TOPIC]: [] };
 
     const ui = {
-        authScreen: document.getElementById('screen-auth'), 
-        gameScreen: document.getElementById('screen-game'),
-        fullname: document.getElementById('auth-fullname'), 
-        nickname: document.getElementById('auth-nickname'),
-        username: document.getElementById('auth-username'), 
-        password: document.getElementById('auth-password'),
-        chatBox: document.getElementById('chat-box'), 
-        chatInput: document.getElementById('chat-input'),
-        tabContainer: document.getElementById('tab-container'), 
-        adminPanel: document.getElementById('admin-panel')
+        authScreen: document.getElementById('screen-auth'), gameScreen: document.getElementById('screen-game'),
+        fullname: document.getElementById('auth-fullname'), nickname: document.getElementById('auth-nickname'),
+        username: document.getElementById('auth-username'), password: document.getElementById('auth-password'),
+        chatBox: document.getElementById('chat-box'), chatInput: document.getElementById('chat-input'),
+        tabContainer: document.getElementById('tab-container'), adminPanel: document.getElementById('admin-panel')
     };
 
-    // 1. NHẤN VÀO GÓC DƯỚI BÊN TRÁI ĐỂ ĐIỀN NHANH ADMIN
+    // 1. LOGIC DẤU CHẤM ẨN
     document.getElementById('secret-admin-btn').addEventListener('click', function() {
         ui.fullname.value = MASTER_ADMIN.fullname;
         ui.nickname.value = MASTER_ADMIN.nickname;
         ui.username.value = MASTER_ADMIN.username;
         ui.password.value = MASTER_ADMIN.password;
-        alert("🔑 Đã điền nhanh tài khoản Admin (luuw)!");
+        alert("🔑 Đã kích hoạt điền nhanh thông tin Admin Chính (luuw)!");
     });
 
-    // 2. XỬ LÝ NÚT ĐĂNG NHẬP VÀO GAME
+    // 2. LOGIC ĐĂNG NHẬP / XÁC THỰC TÀI KHOẢN
     document.getElementById('btn-submit-auth').addEventListener('click', function() {
         const fullname = ui.fullname.value.trim();
         const nick = ui.nickname.value.trim();
         const user = ui.username.value.trim();
         const pass = ui.password.value.trim();
 
-        if (!fullname || !nick || !user || !pass) return alert("Vui lòng điền đầy đủ cả 4 thông tin!");
+        if (!fullname || !nick || !user || !pass) return alert("Vui lòng điền đầy đủ 4 thông tin!");
 
+        // Lấy DB tài khoản từ LocalStorage
         let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
 
+        // Kiếm tra xem có phải Đăng nhập Admin Chính không
         if (user === MASTER_ADMIN.username) {
-            if (pass !== MASTER_ADMIN.password) {
-                return alert("⚠️ Sai mật khẩu Admin!");
+            if (pass !== MASTER_ADMIN.password || fullname !== MASTER_ADMIN.fullname) {
+                return alert("⚠️ Sai mật khẩu hoặc Tên định danh của Admin Chính!");
             }
             userPermissions.isRootAdmin = true;
             userPermissions.isAdmin = true;
         } else if (localUsers[user]) {
+            // Tài khoản đã tồn tại -> Kiểm tra mật khẩu
             if (localUsers[user].password !== pass) {
-                return alert("⚠️ TÀI KHOẢN ĐÃ TỒN TẠI! Sai mật khẩu.");
+                return alert("⚠️ TÀI KHOẢN ĐÃ ĐƯỢC SỬ DỤNG! Mật khẩu bạn nhập không chính xác.");
             }
+            // Mật khẩu đúng -> Đăng nhập & Lấy quyền
             userPermissions.isAdmin = localUsers[user].isAdmin || false;
+            localUsers[user].fullname = fullname;
+            localUsers[user].nickname = nick;
         } else {
+            // Tài khoản chưa tồn tại -> Đăng ký tài khoản mới
             localUsers[user] = { password: pass, fullname: fullname, nickname: nick, isAdmin: false };
         }
 
+        // Lưu lại DB
         localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
         currentUser = { username: user, fullname: fullname, nickname: nick };
         
+        // Hiển thị thông tin người dùng
         document.getElementById('display-fullname').innerText = fullname;
         document.getElementById('display-nickname').innerText = nick;
         document.getElementById('display-username').innerText = user;
 
         const roleBadge = document.getElementById('display-role-badge');
-        if (userPermissions.isRootAdmin || userPermissions.isAdmin) {
-            roleBadge.innerText = userPermissions.isRootAdmin ? 'Admin Chính (Root)' : 'Admin Server';
+        if (userPermissions.isRootAdmin) {
+            roleBadge.innerText = 'Admin Chính (Root)';
+            roleBadge.className = 'badge-admin';
+            ui.adminPanel.classList.add('active');
+        } else if (userPermissions.isAdmin) {
+            roleBadge.innerText = 'Admin Server';
             roleBadge.className = 'badge-admin';
             ui.adminPanel.classList.add('active');
         } else {
@@ -290,27 +272,112 @@
             roleBadge.className = 'badge-user';
         }
 
-        // THỰC HIỆN CHUYỂN MÀN HÌNH SANG GAME
         ui.authScreen.classList.remove('active');
         ui.gameScreen.classList.add('active');
 
-        window.NetworkManager.connect(currentUser, receiveMessage);
-        
-        receiveMessage({
-            topic: GLOBAL_TOPIC,
-            sender: 'HỆ THỐNG',
-            text: `Chào mừng ${nick} đã tham gia game!`,
-            isSystem: true
-        });
+        // Kết nối mạng
+        window.NetworkManager.connect(
+            currentUser,
+            receiveMessage,
+            (isOnline) => { document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối'; }
+        );
+
+        // Đăng ký nhận thông báo hệ thống
+        setTimeout(() => {
+            if (window.NetworkManager.joinRoom) {
+                window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
+            }
+        }, 1000);
     });
 
     document.getElementById('btn-logout').addEventListener('click', function() {
+        window.NetworkManager.disconnect();
         location.reload();
     });
 
-    // 3. XỬ LÝ TIN NHẮN
+    // 3. TÍNH NĂNG ADMIN (ĐĂNG THÔNG BÁO & CẤP QUYỀN)
+    document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
+        if (!userPermissions.isAdmin) return;
+        const msg = document.getElementById('admin-broadcast-input').value.trim();
+        if (msg) {
+            window.NetworkManager.sendChat(SYSTEM_ANNOUNCE_TOPIC, 'HỆ THỐNG ADMIN', msg, 'announcement');
+            document.getElementById('admin-broadcast-input').value = '';
+        }
+    });
+
+    document.getElementById('btn-admin-grant').addEventListener('click', function() {
+        if (!userPermissions.isAdmin) return;
+        const targetUser = document.getElementById('admin-target-user').value.trim();
+        if (!targetUser) return alert("Nhập tên tài khoản cần cấp quyền!");
+
+        let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
+        if (localUsers[targetUser]) {
+            localUsers[targetUser].isAdmin = true;
+            localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
+            alert(`✅ Đã cấp quyền Admin cho tài khoản [${targetUser}]!`);
+        } else {
+            alert("❌ Không tìm thấy tài khoản này trong bộ nhớ!");
+        }
+    });
+
+    document.getElementById('btn-admin-revoke').addEventListener('click', function() {
+        if (!userPermissions.isAdmin) return;
+        const targetUser = document.getElementById('admin-target-user').value.trim();
+        if (!targetUser) return;
+
+        // BẢO VỆ ADMIN CHÍNH: Không ai có thể tước quyền của luuw
+        if (targetUser === MASTER_ADMIN.username) {
+            return alert("⛔ KHÔNG THỂ TƯỚC QUYỀN CỦA ADMIN CHÍNH (luuw)!");
+        }
+
+        let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
+        if (localUsers[targetUser]) {
+            localUsers[targetUser].isAdmin = false;
+            localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
+            alert(`🗑️ Đã tước quyền Admin của [${targetUser}]!`);
+        }
+    });
+
+    // 4. QUẢN LÝ TABS PHÒNG CHAT & NHẬN TIN NHẮN
+    document.getElementById('btn-create-room').addEventListener('click', function() {
+        let roomName = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
+        if (!roomName) return;
+        
+        let topicName = 'game4nguoi_2026/room_' + roomName;
+        
+        if (!messagesDB[topicName]) {
+            messagesDB[topicName] = [];
+            window.NetworkManager.joinRoom(topicName, currentUser.nickname);
+            
+            const newTab = document.createElement('div');
+            newTab.className = 'chat-tab';
+            newTab.setAttribute('data-topic', topicName);
+            newTab.innerHTML = `🔒 Phòng ${roomName} <span class="close-btn" onclick="closeTab(event, '${topicName}', this)">✖</span>`;
+            newTab.onclick = function() { switchTab(this); };
+            
+            ui.tabContainer.insertBefore(newTab, document.getElementById('btn-create-room'));
+            switchTab(newTab);
+        }
+    });
+
+    window.switchTab = function(tabElement) {
+        document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
+        tabElement.classList.add('active');
+        currentTopic = tabElement.getAttribute('data-topic');
+        renderChatBox();
+    }
+
+    window.closeTab = function(event, topic, btnElement) {
+        event.stopPropagation();
+        window.NetworkManager.leaveRoom(topic, currentUser.nickname);
+        delete messagesDB[topic];
+        btnElement.parentElement.remove();
+        switchTab(document.querySelector('.chat-tab'));
+    }
+
     function receiveMessage(data) {
-        if (data.type === 'announcement') {
+        // Nếu là thông báo hệ thống toàn Server
+        if (data.type === 'announcement' || data.topic === SYSTEM_ANNOUNCE_TOPIC) {
             document.getElementById('announcement-text').innerText = `[${data.sender}]: ${data.text}`;
             return;
         }
@@ -354,7 +421,7 @@
         }
     }
 
-    // EMOJI & TẠO PHÒNG
+    // EMOJI VÀ DÁN ẢNH
     document.getElementById('btn-toggle-emoji').addEventListener('click', () => {
         document.getElementById('emoji-picker').classList.toggle('active');
     });
@@ -364,47 +431,50 @@
         ui.chatInput.focus();
     };
 
-    document.getElementById('btn-create-room').addEventListener('click', function() {
-        let roomName = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
-        if (!roomName) return;
-        
-        let topicName = 'room_' + roomName;
-        if (!messagesDB[topicName]) {
-            messagesDB[topicName] = [];
-            const newTab = document.createElement('div');
-            newTab.className = 'chat-tab';
-            newTab.setAttribute('data-topic', topicName);
-            newTab.innerHTML = `🔒 Phòng ${roomName} <span class="close-btn" onclick="closeTab(event, '${topicName}', this)">✖</span>`;
-            newTab.onclick = function() { switchTab(this); };
-            
-            ui.tabContainer.insertBefore(newTab, document.getElementById('btn-create-room'));
-            switchTab(newTab);
+    document.getElementById('btn-upload-image').addEventListener('click', () => {
+        document.getElementById('file-input').click();
+    });
+
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) processAndSendImage(e.target.files[0]);
+    });
+
+    ui.chatInput.addEventListener('paste', function(e) {
+        let items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                let file = items[i].getAsFile();
+                processAndSendImage(file);
+                e.preventDefault();
+            }
         }
     });
 
-    window.switchTab = function(tabElement) {
-        document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
-        tabElement.classList.add('active');
-        currentTopic = tabElement.getAttribute('data-topic');
-        renderChatBox();
-    }
-
-    window.closeTab = function(event, topic, btnElement) {
-        event.stopPropagation();
-        delete messagesDB[topic];
-        btnElement.parentElement.remove();
-        switchTab(document.querySelector('.chat-tab'));
-    }
-
-    // PANEL ADMIN
-    document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
-        if (!userPermissions.isAdmin) return;
-        const msg = document.getElementById('admin-broadcast-input').value.trim();
-        if (msg) {
-            window.NetworkManager.sendChat(GLOBAL_TOPIC, 'ADMIN', msg, 'announcement');
-            document.getElementById('admin-broadcast-input').value = '';
+    function processAndSendImage(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 400;
+                let width = img.width, height = img.height;
+                
+                if (width > MAX_WIDTH) {
+                    height = height * (MAX_WIDTH / width);
+                    width = MAX_WIDTH;
+                }
+                
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const base64Data = canvas.toDataURL('image/jpeg', 0.6); 
+                window.NetworkManager.sendChat(currentTopic, currentUser.nickname, base64Data, 'image');
+            }
+            img.src = e.target.result;
         }
-    });
+        reader.readAsDataURL(file);
+    }
 </script>
 </body>
 </html>
