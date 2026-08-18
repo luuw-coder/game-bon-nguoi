@@ -1,5 +1,5 @@
 /**
- * NETWORKLOADER.JS - NÂNG CẤP ĐA PHÒNG & THÔNG BÁO RỜI MẠNG
+ * NETWORKLOADER.JS - NÂNG CẤP ĐA PHÒNG & THÔNG BÁO RỜI MẠNG 
  */
 (function (window) {
     'use strict';
