@@ -21,6 +21,19 @@
  *   <script src="firebaseSync.js"></script>
  * ============================================================================
  */
+// Đảm bảo thông tin trong file firebaseSync.js trùng khớp hoàn toàn với thông tin này:
+const firebaseConfig = {
+  apiKey: "AIzaSyD36u8TkGhbtqFeJGs16xrOyQRubF994-c",
+  authDomain: "://firebaseapp.com",
+  databaseURL: "https://firebasedatabase.app",
+  projectId: "game4nguoi-742cb",
+  storageBucket: "game4nguoi-742cb.firebasestorage.app",
+  messagingSenderId: "412516987706",
+  appId: "1:412516987706:web:45321a1875c62a13f81603",
+  measurementId: "G-WD68FN5PYN"
+};
+
+// ... giữ nguyên phần code khởi tạo database bên dưới của file đó
 
 (function (window) {
     'use strict';
