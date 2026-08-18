@@ -602,7 +602,7 @@
         }
     });
 
-    function processAndSendImage(file) {
+       function processAndSendImage(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
@@ -628,5 +628,18 @@
         reader.readAsDataURL(file);
     }
 </script>
+
+<!-- ============================================================================
+     NẠP CÁC SDK FIREBASE COMPAT (ĐẶT VÀO ĐÂY ĐỂ ĐỂ SỬA LỖI KẾT NỐI)
+     ============================================================================ -->
+<!-- 1. Thư viện lõi Firebase App -->
+<script src="https://gstatic.com"></script>
+
+<!-- 2. Thư viện Realtime Database tương thích cấu trúc file firebaseSync.js -->
+<script src="https://gstatic.com"></script>
+
+<!-- 3. Tệp logic xử lý đồng bộ đám mây đã khai báo config của bạn -->
+<script src="firebaseSync.js"></script>
+
 </body>
 </html>
