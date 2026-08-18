@@ -1,5 +1,5 @@
 /**
- * NETWORKLOADER.JS - ĐÃ SỬA LỖI ĐỒNG BỘ KÊNH CHAT
+ * NETWORKLOADER.JS - SỬA LỖI HIỂN THỊ CHAT & THÔNG BÁO VÀO/THOÁT
  */
 (function (window) {
     'use strict';
@@ -8,15 +8,19 @@
     const DEFAULT_GLOBAL_TOPIC = 'game4nguoi_2026/global';
     let mqttClient = null;
     let joinedTopics = [];
+    let currentNickname = '';
 
     window.NetworkManager = {
         connect: function (user, onMessageCallback, onStatusCallback) {
+            currentNickname = user.nickname;
+            joinedTopics = []; // Reset danh sách phòng khi khởi tạo kết nối mới
+            
             const clientId = 'player_' + Math.random().toString(16).substring(2, 10);
             
-            // Thiết lập Last Will: Tự động phát tin nhắn thông báo khi mất kết nối đột ngột
+            // Last Will: Tự động phát thông báo nếu mất mạng bất ngờ
             const offlineMessage = JSON.stringify({
                 sender: 'Hệ thống',
-                text: `[${user.nickname}] đã rời khỏi mạng trò chuyện!`,
+                text: `[${user.nickname}] đã mất kết nối mạng!`,
                 isSystem: true,
                 type: 'text'
             });
@@ -34,7 +38,7 @@
             mqttClient.on('message', function (topic, message) {
                 try {
                     const data = JSON.parse(message.toString());
-                    data.topic = topic; // Đánh dấu tên kênh vào dữ liệu tin nhắn
+                    data.topic = topic;
                     if (onMessageCallback) onMessageCallback(data);
                 } catch (e) {
                     console.error("Lỗi đọc dữ liệu mạng:", e);
@@ -52,28 +56,31 @@
         },
 
         joinRoom: function(topic, nickname) {
-            if (mqttClient && mqttClient.connected && !joinedTopics.includes(topic)) {
-                mqttClient.subscribe(topic, function(err) {
-                    if (!err) {
+            if (!mqttClient || !mqttClient.connected) return;
+
+            // Subscribe kênh MQTT
+            mqttClient.subscribe(topic, { qos: 0 }, function(err) {
+                if (!err) {
+                    if (!joinedTopics.includes(topic)) {
                         joinedTopics.push(topic);
-                        
-                        // Không gửi tin nhắn tham gia nếu là kênh thông báo Server
-                        if (topic !== 'game4nguoi_2026/system_announcement') {
-                            const joinMsg = JSON.stringify({ 
-                                sender: 'Hệ thống', 
-                                text: `[${nickname}] đã tham gia phòng!`, 
-                                isSystem: true, 
-                                type: 'text' 
-                            });
-                            mqttClient.publish(topic, joinMsg);
-                        }
                     }
-                });
-            }
+                    
+                    // Gửi thông báo tham gia (Trừ kênh thông báo hệ thống)
+                    if (topic !== 'game4nguoi_2026/system_announcement') {
+                        const joinMsg = JSON.stringify({ 
+                            sender: 'Hệ thống', 
+                            text: `[${nickname}] đã tham gia phòng!`, 
+                            isSystem: true, 
+                            type: 'text' 
+                        });
+                        mqttClient.publish(topic, joinMsg);
+                    }
+                }
+            });
         },
 
         leaveRoom: function(topic, nickname) {
-            if (mqttClient && joinedTopics.includes(topic)) {
+            if (mqttClient && mqttClient.connected && joinedTopics.includes(topic)) {
                 const leaveMsg = JSON.stringify({ 
                     sender: 'Hệ thống', 
                     text: `[${nickname}] đã rời phòng!`, 
@@ -81,7 +88,6 @@
                     type: 'text' 
                 });
                 mqttClient.publish(topic, leaveMsg);
-                
                 mqttClient.unsubscribe(topic);
                 joinedTopics = joinedTopics.filter(t => t !== topic);
             }
@@ -99,10 +105,28 @@
             }
         },
 
-        disconnect: function () {
+        disconnect: function (nickname) {
+            const nameToUse = nickname || currentNickname;
             if (mqttClient) {
-                mqttClient.end();
-                mqttClient = null;
+                // Gửi thông báo rời tất cả các phòng trước khi ngắt kết nối
+                joinedTopics.forEach(topic => {
+                    if (topic !== 'game4nguoi_2026/system_announcement') {
+                        const leaveMsg = JSON.stringify({ 
+                            sender: 'Hệ thống', 
+                            text: `[${nameToUse}] đã rời phòng!`, 
+                            isSystem: true, 
+                            type: 'text' 
+                        });
+                        mqttClient.publish(topic, leaveMsg);
+                    }
+                });
+
+                setTimeout(() => {
+                    if (mqttClient) {
+                        mqttClient.end();
+                        mqttClient = null;
+                    }
+                }, 200);
             }
             joinedTopics = [];
         }
