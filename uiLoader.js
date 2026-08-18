@@ -112,3 +112,132 @@
     }
 
 })(window);
+/**
+ * UILoader - Lắng nghe sự kiện người dùng và điều khiển giao diện UI
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Lấy các phần tử DOM Đăng nhập
+  const btnLogin = document.getElementById('btn-submit-login');
+  const inputNickname = document.getElementById('input-nickname');
+  const inputUsername = document.getElementById('input-username');
+  const inputPassword = document.getElementById('input-password');
+
+  // 2. Lấy các phần tử DOM Giao diện Game
+  const displayNickname = document.getElementById('display-nickname');
+  const displayUsername = document.getElementById('display-username');
+  const chatBox = document.getElementById('chat-box');
+  const inputChatMsg = document.getElementById('input-chat-msg');
+  const btnSendChat = document.getElementById('btn-send-chat');
+  const btnLogout = document.getElementById('btn-logout');
+
+  // 3. Lấy các phần tử DOM Admin
+  const btnOpenAdmin = document.getElementById('btn-open-admin');
+  const btnBackFromAdmin = document.getElementById('btn-back-from-admin');
+
+  // 4. Các nút Menu chức năng
+  const btnJoinRoom = document.getElementById('btn-join-room');
+
+  // ==========================================
+  // XỬ LÝ LỖI 1: ĐĂNG NHẬP CHUYỂN VÀO GAME
+  // ==========================================
+  if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+      const nickname = inputNickname.value.trim();
+      const username = inputUsername.value.trim();
+      const password = inputPassword.value.trim();
+
+      if (!nickname || !username) {
+        alert("Vui lòng nhập Xưng hô và Tài khoản!");
+        return;
+      }
+
+      // Gọi NetworkLoader để xác nhận đăng nhập
+      const response = await NetworkLoader.login(nickname, username, password);
+
+      if (response.success) {
+        // Cập nhật thông tin giao diện người dùng
+        displayNickname.textContent = response.user.nickname;
+        displayUsername.textContent = response.user.username;
+
+        // Xóa cũ và Thêm tin nhắn chào mừng vào Chat Box đúng như hình ảnh
+        chatBox.innerHTML = `
+          <div class="chat-msg" style="color: #ff9800; font-style: italic;">
+            [${response.user.nickname}] đã gia nhập kênh trò chuyện!
+          </div>
+        `;
+
+        // Chuyển sang Màn hình Game
+        MainRouter.showScreen('screen-main');
+      } else {
+        alert(response.message);
+      }
+    });
+  }
+
+  // ==========================================
+  // XỬ LÝ GỬI TIN NHẮN CHAT
+  // ==========================================
+  function sendMessage() {
+    const text = inputChatMsg.value.trim();
+    const user = NetworkLoader.getCurrentUser();
+    if (text && user) {
+      const msgElem = document.createElement('div');
+      msgElem.className = 'chat-msg';
+      msgElem.innerHTML = `<strong style="color:#ff9800;">[${user.nickname}]:</strong> ${text}`;
+      chatBox.appendChild(msgElem);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      inputChatMsg.value = '';
+    }
+  }
+
+  if (btnSendChat) {
+    btnSendChat.addEventListener('click', sendMessage);
+  }
+  if (inputChatMsg) {
+    inputChatMsg.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  }
+
+  // ==========================================
+  // XỬ LÝ BẤM NHẬP MÃ PHÒNG (Ví dụ 777 như ảnh 3)
+  // ==========================================
+  if (btnJoinRoom) {
+    btnJoinRoom.addEventListener('click', () => {
+      const roomCode = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
+      if (roomCode) {
+        alert(`Đã vào phòng: ${roomCode}`);
+      }
+    });
+  }
+
+  // ==========================================
+  // XỬ LÝ ĐĂNG XUẤT
+  // ==========================================
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      NetworkLoader.logout();
+      MainRouter.showScreen('screen-login');
+    });
+  }
+
+  // ==========================================
+  // XỬ LÝ LỖI 2: NÚT ADMIN BẤM DỄ DÀNG
+  // ==========================================
+  if (btnOpenAdmin) {
+    btnOpenAdmin.addEventListener('click', () => {
+      MainRouter.showScreen('screen-admin');
+    });
+  }
+
+  if (btnBackFromAdmin) {
+    btnBackFromAdmin.addEventListener('click', () => {
+      // Nếu đã đăng nhập thì về màn hình game, chưa thì về login
+      if (NetworkLoader.getCurrentUser()) {
+        MainRouter.showScreen('screen-main');
+      } else {
+        MainRouter.showScreen('screen-login');
+      }
+    });
+  }
+});
