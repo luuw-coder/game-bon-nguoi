@@ -75,7 +75,6 @@
 </head>
 <body>
 
-<!-- DẤU CHẤM ẨN BÍ MẬT -->
 <div class="secret-dot" id="secret-admin-btn" title="Chế độ Quản Trị Viên"></div>
 
 <div class="container">
@@ -185,13 +184,7 @@
     const GLOBAL_TOPIC = 'game4nguoi_2026/global';
     const SYSTEM_ANNOUNCE_TOPIC = 'game4nguoi_2026/system_announcement';
     
-    // TÀI KHOẢN ADMIN CHÍNH
-    const MASTER_ADMIN = {
-        username: 'luuw',
-        password: 'luuw',
-        fullname: 'luuw',
-        nickname: 'luuw'
-    };
+    const MASTER_ADMIN = { username: 'luuw', password: 'luuw', fullname: 'luuw', nickname: 'luuw' };
 
     let currentUser = null;
     let currentTopic = GLOBAL_TOPIC;
@@ -207,7 +200,7 @@
         tabContainer: document.getElementById('tab-container'), adminPanel: document.getElementById('admin-panel')
     };
 
-    // 1. LOGIC DẤU CHẤM ẨN
+    // 1. DẤU CHẤM ẨN
     document.getElementById('secret-admin-btn').addEventListener('click', function() {
         ui.fullname.value = MASTER_ADMIN.fullname;
         ui.nickname.value = MASTER_ADMIN.nickname;
@@ -216,7 +209,7 @@
         alert("🔑 Đã kích hoạt điền nhanh thông tin Admin Chính (luuw)!");
     });
 
-    // 2. LOGIC ĐĂNG NHẬP / XÁC THỰC TÀI KHOẢN
+    // 2. ĐĂNG NHẬP / XÁC THỰC
     document.getElementById('btn-submit-auth').addEventListener('click', function() {
         const fullname = ui.fullname.value.trim();
         const nick = ui.nickname.value.trim();
@@ -253,28 +246,25 @@
 
         const roleBadge = document.getElementById('display-role-badge');
         if (userPermissions.isRootAdmin) {
-            roleBadge.innerText = 'Admin Chính (Root)';
-            roleBadge.className = 'badge-admin';
+            roleBadge.innerText = 'Admin Chính (Root)'; roleBadge.className = 'badge-admin';
             ui.adminPanel.classList.add('active');
         } else if (userPermissions.isAdmin) {
-            roleBadge.innerText = 'Admin Server';
-            roleBadge.className = 'badge-admin';
+            roleBadge.innerText = 'Admin Server'; roleBadge.className = 'badge-admin';
             ui.adminPanel.classList.add('active');
         } else {
-            roleBadge.innerText = 'Thành Viên';
-            roleBadge.className = 'badge-user';
+            roleBadge.innerText = 'Thành Viên'; roleBadge.className = 'badge-user';
         }
 
         ui.authScreen.classList.remove('active');
         ui.gameScreen.classList.add('active');
 
-        // Kết nối mạng & tự động tham gia Kênh Chung + Kênh Thông Báo
+        // KẾT NỐI MẠNG VÀ DÒNG PHÒNG CHUNG
         window.NetworkManager.connect(
             currentUser,
             receiveMessage,
             (isOnline) => { 
                 document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
-                if(isOnline) {
+                if (isOnline) {
                     window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
                     window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
                 }
@@ -282,12 +272,21 @@
         );
     });
 
+    // 3. THOÁT VÀ ĐĂNG XUẤT
     document.getElementById('btn-logout').addEventListener('click', function() {
-        window.NetworkManager.disconnect();
-        location.reload();
+        if (currentUser) {
+            window.NetworkManager.disconnect(currentUser.nickname);
+        }
+        setTimeout(() => { location.reload(); }, 300);
     });
 
-    // 3. TÍNH NĂNG ADMIN
+    window.addEventListener('beforeunload', function() {
+        if (currentUser) {
+            window.NetworkManager.disconnect(currentUser.nickname);
+        }
+    });
+
+    // 4. ADMIN BroadCast & Grant
     document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
         if (!userPermissions.isAdmin) return;
         const msg = document.getElementById('admin-broadcast-input').value.trim();
@@ -306,9 +305,9 @@
         if (localUsers[targetUser]) {
             localUsers[targetUser].isAdmin = true;
             localStorage.setItem('game4nguoi_users_db', JSON.stringify(localUsers));
-            alert(`✅ Đã cấp quyền Admin cho tài khoản [${targetUser}]!`);
+            alert(`✅ Đã cấp quyền Admin cho [${targetUser}]!`);
         } else {
-            alert("❌ Không tìm thấy tài khoản này trong bộ nhớ!");
+            alert("❌ Không tìm thấy tài khoản!");
         }
     });
 
@@ -317,9 +316,7 @@
         const targetUser = document.getElementById('admin-target-user').value.trim();
         if (!targetUser) return;
 
-        if (targetUser === MASTER_ADMIN.username) {
-            return alert("⛔ KHÔNG THỂ TƯỚC QUYỀN CỦA ADMIN CHÍNH (luuw)!");
-        }
+        if (targetUser === MASTER_ADMIN.username) return alert("⛔ KHÔNG THỂ TƯỚC QUYỀN CỦA ADMIN CHÍNH!");
 
         let localUsers = JSON.parse(localStorage.getItem('game4nguoi_users_db')) || {};
         if (localUsers[targetUser]) {
@@ -329,7 +326,7 @@
         }
     });
 
-    // 4. QUẢN LÝ PHÒNG CHAT & NHẬN TIN NHẮN
+    // 5. TẠO PHÒNG & XỬ LÝ CHAT
     document.getElementById('btn-create-room').addEventListener('click', function() {
         let roomName = prompt("Nhập mã phòng riêng (Ví dụ: 777):");
         if (!roomName) return;
@@ -411,7 +408,7 @@
         }
     }
 
-    // EMOJI VÀ DÁN ẢNH
+    // EMOJI VÀ UP ẢNH
     document.getElementById('btn-toggle-emoji').addEventListener('click', () => {
         document.getElementById('emoji-picker').classList.toggle('active');
     });
