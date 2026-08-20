@@ -53,10 +53,26 @@
         console.error('[FirebaseSync Error]: Không thể khởi tạo Firebase.', err);
     }
 
+    // ========================================================================
+    // Firebase Realtime Database CẤM các ký tự . # $ [ ] trong path/key.
+    // Vì username của app này có dạng email (vd: "abc@game4nguoi.com"), phải
+    // mã hoá các ký tự cấm thành chuỗi an toàn trước khi dùng làm key, và
+    // giải mã ngược lại khi cần hiển thị / so sánh.
+    // ========================================================================
+    function encodeKey(str) {
+        return String(str)
+            .replace(/\./g, ',dot,')
+            .replace(/#/g, ',hash,')
+            .replace(/\$/g, ',dollar,')
+            .replace(/\[/g, ',lb,')
+            .replace(/\]/g, ',rb,')
+            .replace(/@/g, ',at,');
+    }
+
     // Các tham chiếu bảng dữ liệu
     const REF_USERS = () => db.ref('users');
-    const REF_USER = (username) => db.ref('users/' + username);
-    const REF_KICKS = (sessionId) => db.ref('kicks/' + sessionId);
+    const REF_USER = (username) => db.ref('users/' + encodeKey(username));
+    const REF_KICKS = (sessionId) => db.ref('kicks/' + encodeKey(sessionId));
 
     // ========================================================================
     // II. TIỆN ÍCH NỘI BỘ
