@@ -10,7 +10,7 @@
         body { background: #121212; color: #fff; min-height: 100vh; padding: 0; position: relative; }
         .page-wrap { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
         .container { width: 100%; max-width: none; background: #1e1e1e; padding: 22px 32px; border-radius: 0; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
-        .container.auth-mode { max-width: 460px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        .container.auth-mode { max-width: 620px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
         h1 { text-align: center; color: #ff9800; margin-bottom: 20px; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
         .screen { display: none; } .screen.active { display: block; }
         
@@ -32,11 +32,11 @@
         .username-input-group.focused { border-color: #ff9800; }
         .username-suffix { background: #333; color: #aaa; padding: 10px 10px; font-size: 13px; white-space: nowrap; display: flex; align-items: center; }
 
-        /* BỐ CỤC: CHAT (TRÁI, DÀI) — 6 NÚT MENU (GIỮA) — TIỆN ÍCH (PHẢI) */
-        .game-layout { display: flex; gap: 18px; flex: 1; align-items: stretch; min-height: 0; width: 100%; }
+        /* BỐ CỤC: CHAT (GÓC TRÊN-TRÁI, GỌN) — 6 NÚT MENU (GIỮA) — CỘT PHẢI (user/thông báo/tiện ích/quyền hạn) */
+        .game-layout { display: flex; gap: 18px; flex: 1; align-items: flex-start; min-height: 0; width: 100%; }
 
         .chat-sidebar {
-            flex: 0 0 340px; max-width: 340px;
+            flex: 0 0 300px; max-width: 300px; height: 300px;
             background: #181818; border: 1px solid #333; border-radius: 8px;
             padding: 10px; display: flex; flex-direction: column;
             box-shadow: 0 4px 14px rgba(0,0,0,0.5);
@@ -45,7 +45,7 @@
         .chat-sidebar-header span { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
         .chat-collapse-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; padding: 2px 6px; }
         .chat-collapse-btn:hover { color: #fff; }
-        .chat-sidebar.collapsed { flex: 0 0 44px; max-width: 44px; overflow: hidden; }
+        .chat-sidebar.collapsed { flex: 0 0 44px; max-width: 44px; height: 44px; overflow: hidden; }
 
         .chat-tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 5px; }
         .chat-tab { padding: 5px 10px; background: #2a2a2a; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #444; }
@@ -71,30 +71,44 @@
         .emoji-item { cursor: pointer; font-size: 18px; transition: 0.2s; }
         .emoji-item:hover { transform: scale(1.3); }
 
-        /* 6 NÚT MENU CHÍNH — Ở GIỮA */
-        .menu-center { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+        /* CỘT GIỮA — CHỈ 6 NÚT MENU CHÍNH */
+        .menu-center { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; align-self: stretch; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex: 1; align-content: start; }
+        .menu-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 26px 14px; text-align: center; cursor: pointer; transition: 0.15s; }
+        .menu-item:hover { background: #2a2a2a; border-color: #ff9800; transform: translateY(-2px); }
+        .menu-item .menu-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .menu-item .menu-label { font-size: 13px; color: #ddd; font-weight: bold; }
+
+        /* CỘT PHẢI — GỘP: user rút gọn (xưng hô đổi được + kết nối), thông báo, tiện ích, quyền hạn */
+        .side-utils { flex: 0 0 280px; max-width: 280px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
         .user-card { background: #1a1a1a; padding: 12px 14px; border-radius: 6px; border-left: 4px solid #4caf50; }
         .user-card p { font-size: 13px; margin-bottom: 4px; color: #ddd; }
         .user-card span { color: #ff9800; font-weight: bold; }
+        .nickname-editable { cursor: pointer; border-bottom: 1px dashed #ff9800; }
+        .nickname-editable:hover { color: #ffb74d; }
+        .nickname-edit-input { background: #111; border: 1px solid #ff9800; color: #fff; border-radius: 4px; padding: 2px 6px; font-size: 13px; font-weight: bold; width: 120px; }
 
         .announcement-box { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px 14px; }
         .announcement-box h4 { color: #ff9800; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .announcement-content { font-size: 13px; color: #ccc; line-height: 1.4; background: #111; padding: 8px; border-radius: 4px; border-left: 3px solid #ff9800; min-height: 45px; }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
-        .menu-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 22px 12px; text-align: center; cursor: pointer; transition: 0.15s; }
-        .menu-item:hover { background: #2a2a2a; border-color: #ff9800; transform: translateY(-2px); }
-        .menu-item .menu-icon { font-size: 30px; display: block; margin-bottom: 8px; }
-        .menu-item .menu-label { font-size: 13px; color: #ddd; font-weight: bold; }
-
-        /* CỘT TIỆN ÍCH — BÊN PHẢI CÙNG */
-        .side-utils { flex: 0 0 260px; max-width: 260px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
         .util-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px 14px; }
         .util-box h4 { color: #4fc3f7; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .util-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
         .util-list li { background: #222; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #ccc; cursor: pointer; transition: 0.15s; }
         .util-list li:hover { background: #2c2c2c; color: #fff; }
         .online-count { color: #4caf50; font-weight: bold; }
+
+        /* GIÁM SÁT ADMIN (chỉ Admin cấp 5 thấy) — theo dõi phòng chat riêng đang hoạt động */
+        .monitor-box { display: none; background: #241a1a; border: 1px solid #e53935; border-radius: 8px; padding: 12px 14px; }
+        .monitor-box.active { display: block; }
+        .monitor-box h4 { color: #ff5252; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .monitor-empty { font-size: 12px; color: #888; font-style: italic; }
+        .monitor-room { background: #1c1414; border: 1px solid #442; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: 0.15s; }
+        .monitor-room:hover { background: #2a1e1e; border-color: #e53935; }
+        .monitor-room .mr-name { font-size: 12px; color: #ff8a80; font-weight: bold; }
+        .monitor-room .mr-info { font-size: 11px; color: #aaa; margin-top: 2px; }
 
         .badge-admin { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .badge-user { background: #4caf50; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
@@ -104,10 +118,14 @@
         .badge-lv4 { background: #ff9800; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .badge-lv5 { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
 
-        /* PANEL CẤP QUYỀN */
-        .admin-panel { display: none; background: #1f1a24; border: 1px solid #9c27b0; border-radius: 6px; padding: 12px 14px; }
+        /* PANEL QUYỀN HẠN (hiện cấp bậc hiện tại; bảng gán cấp chỉ Cấp 4/5 mới thấy) */
+        .permission-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px 14px; }
+        .permission-box h4 { color: #ba68c8; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .permission-summary { font-size: 12px; color: #ccc; margin-bottom: 8px; line-height: 1.5; }
+
+        .admin-panel { display: none; background: #1f1a24; border: 1px solid #9c27b0; border-radius: 6px; padding: 10px 12px; margin-top: 8px; }
         .admin-panel.active { display: block; }
-        .admin-panel h4 { color: #e040fb; font-size: 14px; margin-bottom: 8px; }
+        .admin-panel h4 { color: #e040fb; font-size: 12px; margin-bottom: 8px; }
         .admin-controls { display: flex; flex-direction: column; gap: 8px; }
         .admin-input { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
 
@@ -152,17 +170,19 @@
 <div class="secret-dot-hitbox pos-tl" id="secret-decoy-tl"><div class="secret-dot"></div></div>
 <div class="secret-dot-hitbox pos-tr" id="secret-decoy-tr"><div class="secret-dot"></div></div>
 
-<!-- MODAL: ĐĂNG NHẬP ADMIN ẨN (độc lập với form thường, phải đúng CẢ 3: Tên định danh, Tài khoản, Mật khẩu = luuw) -->
+<!-- MODAL: ĐĂNG NHẬP ADMIN ẨN — giao diện giống hệt form đăng nhập thường, có ô Xưng hô tự đặt.
+     Vẫn phải đúng CẢ 3: Tên định danh, Tài khoản, Mật khẩu = luuw mới vào được. -->
 <div class="modal-overlay" id="modal-secret-admin">
-    <div class="modal-box">
-        <h3>🔐 Xác Thực Quản Trị</h3>
+    <div class="modal-box" style="max-width: 420px;">
+        <h3>🔐 Đăng Nhập</h3>
+        <input type="text" id="secret-nickname" placeholder="Xưng hô / Tên hiển thị..." autocomplete="off">
         <input type="text" id="secret-fullname" placeholder="Tên định danh" autocomplete="off">
         <input type="text" id="secret-username" placeholder="Tài khoản đăng nhập" autocomplete="off">
         <input type="password" id="secret-password" placeholder="Mật khẩu bảo mật" autocomplete="off">
         <div class="modal-error" id="secret-admin-error">Thông tin không chính xác!</div>
         <div class="modal-actions">
             <button class="btn-gray" id="secret-admin-cancel">Huỷ</button>
-            <button class="btn-purple" id="secret-admin-confirm" style="width:auto; margin-top:0;">Xác Nhận</button>
+            <button class="btn-green" id="secret-admin-confirm" style="width:auto; margin-top:0;">Đăng Nhập</button>
         </div>
     </div>
 </div>
@@ -289,24 +309,8 @@
                 </div>
             </div>
 
-            <!-- CỘT GIỮA — thông tin user, thông báo, 6 nút menu chính -->
+            <!-- CỘT GIỮA — CHỈ 6 NÚT MENU CHÍNH -->
             <div class="menu-center">
-                <div class="user-card">
-                    <p>Định danh: <span id="display-fullname">---</span></p>
-                    <p>Xưng hô: <span id="display-nickname">---</span> <span id="display-role-badge" class="badge-lv1">Cấp 1</span></p>
-                    <p>Tài khoản: <span id="display-username">---</span></p>
-                    <p>Kết nối: <span id="display-status-text" style="color:#ffb74d;">Đang kết nối...</span></p>
-                </div>
-
-                <!-- BẢNG THÔNG BÁO MÁY CHỦ -->
-                <div class="announcement-box">
-                    <h4>📢 THÔNG BÁO MÁY CHỦ</h4>
-                    <div class="announcement-content" id="announcement-text">
-                        Chào mừng bạn đến với GAME 4 NGUOI! Vui lòng giữ văn hóa khi trò chuyện.
-                    </div>
-                </div>
-
-                <!-- 6 NÚT MENU CHÍNH — Ở GIỮA -->
                 <div class="menu-grid">
                     <div class="menu-item" id="menu-choose-game">
                         <span class="menu-icon">🎮</span>
@@ -335,8 +339,22 @@
                 </div>
             </div>
 
-            <!-- CỘT PHẢI CÙNG — tiện ích, panel cấp quyền, đăng xuất -->
+            <!-- CỘT PHẢI CÙNG — user rút gọn (xưng hô đổi được), thông báo, tiện ích, quyền hạn, giám sát admin, đăng xuất -->
             <div class="side-utils">
+                <!-- Chỉ hiện Xưng hô (bấm vào để đổi tên) + badge cấp và trạng thái Kết nối -->
+                <div class="user-card">
+                    <p>Xưng hô: <span id="display-nickname" class="nickname-editable" title="Bấm để đổi tên hiển thị">---</span> <span id="display-role-badge" class="badge-lv1">Cấp 1</span></p>
+                    <p>Kết nối: <span id="display-status-text" style="color:#ffb74d;">Đang kết nối...</span></p>
+                </div>
+
+                <!-- BẢNG THÔNG BÁO MÁY CHỦ -->
+                <div class="announcement-box">
+                    <h4>📢 THÔNG BÁO MÁY CHỦ</h4>
+                    <div class="announcement-content" id="announcement-text">
+                        Chào mừng bạn đến với GAME 4 NGUOI! Vui lòng giữ văn hóa khi trò chuyện.
+                    </div>
+                </div>
+
                 <div class="util-box">
                     <h4>🌐 Trạng Thái Server</h4>
                     <p style="font-size:12px; color:#ccc;">Người online: <span class="online-count" id="online-count-text">Đang cập nhật...</span></p>
@@ -353,25 +371,39 @@
                     </ul>
                 </div>
 
-                <!-- PANEL CẤP QUYỀN (chỉ Cấp 4 và Cấp 5 mới thấy) -->
-                <div class="admin-panel" id="admin-panel">
-                    <h4 id="admin-panel-title">👑 BẢNG ĐIỀU HÀNH</h4>
-                    <div class="admin-controls">
-                        <input type="text" id="admin-broadcast-input" class="admin-input" placeholder="Nhập thông báo gửi toàn Server..." style="display:none;">
-                        <button class="tool-btn btn-purple" id="btn-admin-broadcast" style="display:none;">Đăng Thông Báo Server</button>
+                <!-- QUYỀN HẠN CỦA BẠN — luôn hiện cấp bậc hiện tại; bảng gán cấp chỉ Cấp 4/5 mới thấy -->
+                <div class="permission-box">
+                    <h4>🛡️ Quyền Hạn Của Bạn</h4>
+                    <div class="permission-summary" id="permission-summary">Cấp 1 — Thành viên thường.</div>
 
-                        <div style="display:flex; gap:5px; margin-top: 5px; align-items:center; flex-wrap: wrap;">
-                            <input type="text" id="admin-target-user" class="admin-input" placeholder="Tài khoản..." style="flex:1; min-width:90px;">
-                            <select id="admin-target-level" class="admin-input" style="flex:0 0 70px;">
-                                <option value="1">Cấp 1</option>
-                                <option value="2">Cấp 2</option>
-                                <option value="3">Cấp 3</option>
-                                <option value="4">Cấp 4</option>
-                                <option value="5">Cấp 5</option>
-                            </select>
-                            <button class="tool-btn btn-purple" id="btn-admin-set-level">Gán</button>
+                    <div class="admin-panel" id="admin-panel">
+                        <h4 id="admin-panel-title">BẢNG CẤP QUYỀN</h4>
+                        <div class="admin-controls">
+                            <input type="text" id="admin-broadcast-input" class="admin-input" placeholder="Nhập thông báo gửi toàn Server..." style="display:none;">
+                            <button class="tool-btn btn-purple" id="btn-admin-broadcast" style="display:none;">Đăng Thông Báo Server</button>
+
+                            <div style="display:flex; gap:5px; margin-top: 5px; align-items:center; flex-wrap: wrap;">
+                                <input type="text" id="admin-target-user" class="admin-input" placeholder="Tài khoản..." style="flex:1; min-width:90px;">
+                                <select id="admin-target-level" class="admin-input" style="flex:0 0 70px;">
+                                    <option value="1">Cấp 1</option>
+                                    <option value="2">Cấp 2</option>
+                                    <option value="3">Cấp 3</option>
+                                    <option value="4">Cấp 4</option>
+                                    <option value="5">Cấp 5</option>
+                                </select>
+                                <button class="tool-btn btn-purple" id="btn-admin-set-level">Gán</button>
+                            </div>
+                            <span style="font-size:11px; color:#aaa;" id="admin-level-hint"></span>
                         </div>
-                        <span style="font-size:11px; color:#aaa;" id="admin-level-hint"></span>
+                    </div>
+                </div>
+
+                <!-- GIÁM SÁT ADMIN — chỉ Admin (Cấp 5) thấy. Theo dõi phòng chat riêng đang có người tạo/hoạt động,
+                     bấm vào phòng để vào xem trực tiếp. Các cấp khác (1-4) không có mục này. -->
+                <div class="monitor-box" id="monitor-box">
+                    <h4>👁️ Giám Sát Admin</h4>
+                    <div id="monitor-room-list">
+                        <div class="monitor-empty" id="monitor-empty-text">Chưa có phòng chat riêng nào được tạo.</div>
                     </div>
                 </div>
 
@@ -419,8 +451,13 @@
 <script>
     const GLOBAL_TOPIC = 'game4nguoi_2026/global';
     const SYSTEM_ANNOUNCE_TOPIC = 'game4nguoi_2026/system_announcement';
+    const ROOM_REGISTRY_TOPIC = 'game4nguoi_2026/room_registry'; // dùng cho Giám Sát Admin: mọi phòng riêng mới tạo sẽ báo về đây
     const USER_DOMAIN = '@game4nguoi.com';
     const ROOT_ADMIN_USERNAME = 'luuw'; // tài khoản admin gốc — không bị bắt buộc thêm domain
+
+    // Danh sách phòng chat riêng đang hoạt động (chỉ Admin dùng để hiển thị Giám Sát Admin)
+    // { [topic]: { roomName, creator, createdAt } }
+    let knownRooms = {};
 
     let currentUser = null;
     let currentTopic = GLOBAL_TOPIC;
@@ -437,7 +474,8 @@
         fullname: document.getElementById('auth-fullname'), nickname: document.getElementById('auth-nickname'),
         username: document.getElementById('auth-username'), password: document.getElementById('auth-password'),
         chatBox: document.getElementById('chat-box'), chatInput: document.getElementById('chat-input'),
-        tabContainer: document.getElementById('tab-container'), adminPanel: document.getElementById('admin-panel')
+        tabContainer: document.getElementById('tab-container'), adminPanel: document.getElementById('admin-panel'),
+        monitorBox: document.getElementById('monitor-box')
     };
 
     function showModal(id) { document.getElementById(id).classList.add('active'); }
@@ -481,12 +519,13 @@
     //    3 chấm còn lại (br/tl/tr) là ngụy trang, không có xử lý.
     // ========================================================================
     document.getElementById('secret-admin-btn-bl').addEventListener('click', function() {
+        document.getElementById('secret-nickname').value = '';
         document.getElementById('secret-fullname').value = '';
         document.getElementById('secret-username').value = '';
         document.getElementById('secret-password').value = '';
         document.getElementById('secret-admin-error').classList.remove('active');
         showModal('modal-secret-admin');
-        setTimeout(() => document.getElementById('secret-fullname').focus(), 50);
+        setTimeout(() => document.getElementById('secret-nickname').focus(), 50);
     });
 
     document.getElementById('secret-admin-cancel').addEventListener('click', function() {
@@ -499,13 +538,19 @@
     });
 
     function submitSecretAdmin() {
+        const nk = document.getElementById('secret-nickname').value.trim();
         const fn = document.getElementById('secret-fullname').value.trim();
         const un = document.getElementById('secret-username').value.trim();
         const pw = document.getElementById('secret-password').value.trim();
         const errBox = document.getElementById('secret-admin-error');
 
+        if (!nk) {
+            errBox.innerText = 'Vui lòng nhập Xưng hô / Tên hiển thị!';
+            errBox.classList.add('active');
+            return;
+        }
         if (fn !== ROOT_ADMIN_USERNAME || un !== ROOT_ADMIN_USERNAME || pw !== ROOT_ADMIN_USERNAME) {
-            errBox.innerText = 'Thông tin không chính xác! Cả 3 mục phải khớp.';
+            errBox.innerText = 'Thông tin không chính xác! Tên định danh, Tài khoản, Mật khẩu phải khớp.';
             errBox.classList.add('active');
             return;
         }
@@ -518,9 +563,9 @@
         }
 
         hideModal('modal-secret-admin');
-        _pendingLogin = { username: un, password: pw, fullname: fn, nickname: 'Admin' };
+        _pendingLogin = { username: un, password: pw, fullname: fn, nickname: nk };
 
-        window.FirebaseSync.login(un, pw, fn, 'Admin').then(function (result) {
+        window.FirebaseSync.login(un, pw, fn, nk).then(function (result) {
             if (result.status === 'wrong_password') return alert('⚠️ Mật khẩu tài khoản admin không đúng!');
             if (result.status === 'wrong_fullname') return alert('⚠️ Tên định danh admin không khớp!');
             if (result.status === 'conflict') {
@@ -528,7 +573,7 @@
                 showModal('modal-session-conflict');
                 return;
             }
-            finalizeLogin(un, fn, 'Admin', result.user);
+            finalizeLogin(un, fn, nk, result.user);
         }).catch(function (err) {
             alert('❌ Lỗi kết nối Đám Mây: ' + err.message);
         });
@@ -599,14 +644,23 @@
         userPermissions.isAdmin = (level >= 5);
         currentUser = { username: user, fullname: fullname, nickname: nick };
 
-        document.getElementById('display-fullname').innerText = fullname;
         document.getElementById('display-nickname').innerText = nick;
-        document.getElementById('display-username').innerText = user;
 
         const roleBadge = document.getElementById('display-role-badge');
-        const LEVEL_LABELS = { 1: 'Cấp 1', 2: 'Cấp 2', 3: 'Cấp 3', 4: 'Cấp 4 - Điều Hành', 5: 'Cấp 5 - Admin' };
+        // Cấp 5 hiển thị "Admin" thay vì "Cấp 5" — các cấp khác hiển thị "Cấp N"
+        const LEVEL_LABELS = { 1: 'Cấp 1', 2: 'Cấp 2', 3: 'Cấp 3', 4: 'Cấp 4', 5: 'Admin' };
         roleBadge.innerText = LEVEL_LABELS[level] || 'Cấp 1';
         roleBadge.className = 'badge-lv' + level;
+
+        const permSummary = document.getElementById('permission-summary');
+        const PERM_TEXT = {
+            1: 'Cấp 1 — Thành viên thường.',
+            2: 'Cấp 2 — Thành viên thường.',
+            3: 'Cấp 3 — Thành viên thường.',
+            4: 'Cấp 4 — Điều hành: được gán Cấp 1-3 cho người khác.',
+            5: 'Admin — Toàn quyền, gán được mọi cấp 1-5, xem được Giám Sát Admin.'
+        };
+        permSummary.innerText = PERM_TEXT[level] || PERM_TEXT[1];
 
         // Chỉ Cấp 4 và Cấp 5 mới thấy panel cấp quyền
         if (level >= 4) {
@@ -616,12 +670,12 @@
             const broadcastInput = document.getElementById('admin-broadcast-input');
             const broadcastBtn = document.getElementById('btn-admin-broadcast');
             if (level === 5) {
-                document.getElementById('admin-panel-title').innerText = '👑 BẢNG ĐIỀU HÀNH ADMIN (Cấp 5)';
+                document.getElementById('admin-panel-title').innerText = 'BẢNG CẤP QUYỀN (Admin)';
                 hint.innerText = 'Bạn có thể gán mọi cấp (1-5) cho bất kỳ ai.';
                 for (let i = 0; i < levelSelect.options.length; i++) levelSelect.options[i].disabled = false;
                 broadcastInput.style.display = ''; broadcastBtn.style.display = '';
             } else {
-                document.getElementById('admin-panel-title').innerText = '🛡️ BẢNG ĐIỀU HÀNH (Cấp 4)';
+                document.getElementById('admin-panel-title').innerText = 'BẢNG CẤP QUYỀN (Cấp 4)';
                 hint.innerText = 'Bạn chỉ được gán cấp 1-3 cho người khác (không thể gán cấp 4 hoặc 5).';
                 for (let i = 0; i < levelSelect.options.length; i++) {
                     levelSelect.options[i].disabled = (parseInt(levelSelect.options[i].value, 10) > 3);
@@ -630,6 +684,13 @@
             }
         } else {
             ui.adminPanel.classList.remove('active');
+        }
+
+        // GIÁM SÁT ADMIN — chỉ Admin (Cấp 5) mới thấy mục này, các cấp khác (kể cả Cấp 4) không có
+        if (level >= 5) {
+            ui.monitorBox.classList.add('active');
+        } else {
+            ui.monitorBox.classList.remove('active');
         }
 
         // Lắng nghe nếu bị người khác giành mất tài khoản trong lúc đang chơi
@@ -650,10 +711,52 @@
                 if (isOnline) {
                     window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
                     window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
+                    // Admin luôn lắng nghe kênh đăng ký phòng để hiển thị Giám Sát Admin
+                    if (userPermissions.level >= 5) {
+                        window.NetworkManager.joinRoom(ROOM_REGISTRY_TOPIC, currentUser.nickname);
+                    }
                 }
             }
         );
     }
+
+    // ========================================================================
+    // ĐỔI XƯNG HÔ TẠI CHỖ (INLINE EDIT) — bấm vào tên ở cột phải để đổi ngay.
+    // Lưu vào Firebase (field nickname) rồi đồng bộ hiển thị trong chat luôn.
+    // ========================================================================
+    document.getElementById('display-nickname').addEventListener('click', function() {
+        if (!currentUser) return;
+        const span = this;
+        const oldValue = currentUser.nickname;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'nickname-edit-input';
+        input.value = oldValue;
+        input.maxLength = 24;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function commit() {
+            const newNick = input.value.trim();
+            input.replaceWith(span);
+            if (!newNick || newNick === oldValue) { span.innerText = oldValue; return; }
+
+            span.innerText = newNick;
+            window.FirebaseSync.updateNickname(currentUser.username, newNick).then(function () {
+                currentUser.nickname = newNick;
+            }).catch(function (err) {
+                span.innerText = oldValue; // rollback nếu lưu thất bại
+                alert('❌ Không đổi được xưng hô: ' + err.message);
+            });
+        }
+
+        input.addEventListener('blur', commit);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') input.blur();
+        });
+    });
 
     // 2c. BỊ KICK -> chọn thoát hoặc đổi mật khẩu giành lại
     document.getElementById('kicked-just-exit').addEventListener('click', function() {
@@ -814,6 +917,11 @@
 
             ui.tabContainer.insertBefore(newTab, document.getElementById('btn-create-room'));
             switchTab(newTab);
+
+            // Báo cho Admin biết phòng riêng vừa được tạo (Giám Sát Admin) — không phải tin nhắn chat thường
+            window.NetworkManager.sendChat(ROOM_REGISTRY_TOPIC, currentUser.nickname, JSON.stringify({
+                roomTopic: topicName, roomName: roomName, createdAt: Date.now()
+            }), 'room_registry');
         }
     }
 
@@ -872,6 +980,17 @@
             return;
         }
 
+        // GIÁM SÁT ADMIN: có phòng riêng mới được tạo -> ghi nhận và render lại danh sách (chỉ Admin xử lý được vì
+        // chỉ Admin mới join ROOM_REGISTRY_TOPIC, người khác không nhận được message này)
+        if (data.type === 'room_registry' && data.topic === ROOM_REGISTRY_TOPIC) {
+            try {
+                const info = JSON.parse(data.text);
+                knownRooms[info.roomTopic] = { roomName: info.roomName, creator: data.sender, createdAt: info.createdAt };
+                renderMonitorList();
+            } catch (e) { /* bỏ qua message lỗi định dạng */ }
+            return;
+        }
+
         // Đồng bộ trạng thái chủ phòng / danh sách ban trước
         if (currentUser) window.NetworkManager.handleRoomSystemMessage(data, currentUser.nickname);
 
@@ -896,6 +1015,52 @@
         if (!messagesDB[data.topic]) messagesDB[data.topic] = [];
         messagesDB[data.topic].push(data);
         if (data.topic === currentTopic) renderChatBox();
+    }
+
+    // ========================================================================
+    // GIÁM SÁT ADMIN — chỉ Admin (Cấp 5) mới thấy. Hiển thị danh sách phòng chat
+    // riêng đang hoạt động, bấm vào phòng nào là admin tự join vào xem trực tiếp.
+    // ========================================================================
+    function renderMonitorList() {
+        const listEl = document.getElementById('monitor-room-list');
+        const roomTopics = Object.keys(knownRooms);
+
+        if (roomTopics.length === 0) {
+            listEl.innerHTML = '<div class="monitor-empty" id="monitor-empty-text">Chưa có phòng chat riêng nào được tạo.</div>';
+            return;
+        }
+
+        listEl.innerHTML = '';
+        roomTopics.forEach(topic => {
+            const info = knownRooms[topic];
+            const timeStr = new Date(info.createdAt).toLocaleTimeString('vi-VN');
+            const div = document.createElement('div');
+            div.className = 'monitor-room';
+            div.innerHTML = `<div class="mr-name">🔒 Phòng ${info.roomName}</div><div class="mr-info">Tạo bởi ${info.creator} lúc ${timeStr}</div>`;
+            div.onclick = function() { adminJoinMonitoredRoom(topic, info.roomName); };
+            listEl.appendChild(div);
+        });
+    }
+
+    function adminJoinMonitoredRoom(topic, roomName) {
+        if (!currentUser) return;
+
+        // Nếu đã có tab cho phòng này rồi (admin từng vào) -> chỉ chuyển sang tab đó
+        const existingTab = document.querySelector(`.chat-tab[data-topic="${topic}"]`);
+        if (existingTab) { switchTab(existingTab); return; }
+
+        messagesDB[topic] = [];
+        // Admin join để XEM, không phải người tạo phòng nên không nhận quyền chủ phòng (isNewRoomCreator=false)
+        window.NetworkManager.joinRoom(topic, currentUser.nickname, false);
+
+        const newTab = document.createElement('div');
+        newTab.className = 'chat-tab';
+        newTab.setAttribute('data-topic', topic);
+        newTab.innerHTML = `👁️ P.${roomName} <span class="close-btn" onclick="closeTab(event, '${topic}', this)">✖</span>`;
+        newTab.onclick = function() { switchTab(this); };
+
+        ui.tabContainer.insertBefore(newTab, document.getElementById('btn-create-room'));
+        switchTab(newTab);
     }
 
     function renderChatBox() {
