@@ -415,7 +415,48 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script src="firebaseSync.js"></script>
 <script src="networkLoader.js"></script>
+    <!-- === THÊM ĐOẠN NÀY ĐỂ CHỐNG LỖI KHI THIẾU FILE BACKEND === -->
+    <script>
+    if (typeof window.FirebaseSync === 'undefined') {
+        window.FirebaseSync = {
+            isReady: () => true,
+            login: (user, pass, fullname, nick) => Promise.resolve({ status: 'ok', user: { level: 1, isAdmin: false } }),
+            logout: () => {},
+            onForceKicked: () => {},
+            changePassword: () => Promise.resolve({ status: 'ok' }),
+            setLevel: () => Promise.resolve({ status: 'ok' }),
+            forceClaim: () => Promise.resolve({ status: 'ok', user: { level: 1 } })
+        };
+        console.warn("⚠️ [MOCK] firebaseSync.js chưa tải. Đang dùng chế độ giả lập.");
+    }
 
+    if (typeof window.NetworkManager === 'undefined' || typeof window.NetworkManager.connect !== 'function') {
+        window.NetworkManager = {
+            connect: (user, onMessage, onStatus) => {
+                console.log("🟢 [MOCK] NetworkManager: Đã kết nối", user);
+                onStatus(true);
+                setTimeout(() => {
+                    onMessage({ topic: 'game4nguoi_2026/global', sender: 'Hệ Thống', text: 'Chào mừng ' + user.nickname + '! (Chế độ thử nghiệm giao diện)', isSystem: true });
+                }, 500);
+            },
+            disconnect: () => console.log("🔴 [MOCK] NetworkManager: Đã ngắt kết nối"),
+            joinRoom: (topic, nick, isOwner) => console.log("🟢 [MOCK] Tham gia phòng:", topic),
+            leaveRoom: (topic, nick) => console.log("🔴 [MOCK] Rời phòng:", topic),
+            sendChat: (topic, sender, text, type) => {
+                console.log("💬 [MOCK] Đã gửi tin nhắn:", text);
+                // Gọi hàm receiveMessage nếu nó đã được định nghĩa
+                if (typeof receiveMessage === 'function') {
+                    receiveMessage({ topic: topic, sender: sender, text: text, type: type });
+                }
+            },
+            handleRoomSystemMessage: () => {},
+            isRoomOwner: () => false,
+            kickFromRoom: () => alert("⛔ [MOCK] Chức năng Kick/Ban chỉ hoạt động khi có NetworkManager thật.")
+        };
+        console.warn("⚠️ [MOCK] networkLoader.js chưa tải. Đang dùng chế độ giả lập.");
+    }
+    
+    <!-- ========================================================== -->
 <script>
     const GLOBAL_TOPIC = 'game4nguoi_2026/global';
     const SYSTEM_ANNOUNCE_TOPIC = 'game4nguoi_2026/system_announcement';
@@ -594,10 +635,19 @@
 
     function finalizeLogin(user, fullname, nick, userData) {
         // Cấp bậc: ưu tiên field 'level' (1-5); nếu tài khoản cũ chưa có level, suy ra từ isAdmin
-        let level = (userData && typeof userData.level === 'number') ? userData.level : ((userData && userData.isAdmin) ? 5 : 1);
-        userPermissions.level = level;
-        userPermissions.isAdmin = (level >= 5);
-        currentUser = { username: user, fullname: fullname, nickname: nick };
+           // Sửa lỗi: Đảm bảo userData tồn tại trước khi đọc thuộc tính
+   let level = 1; // Mặc định là cấp 1
+   if (userData) {
+       if (typeof userData.level === 'number') {
+           level = userData.level;
+       } else if (userData.isAdmin) {
+           level = 5;
+       }
+   }
+   
+   userPermissions.level = level;
+   userPermissions.isAdmin = (level >= 5);
+   currentUser = { username: user, fullname: fullname, nickname: nick };
 
         document.getElementById('display-fullname').innerText = fullname;
         document.getElementById('display-nickname').innerText = nick;
