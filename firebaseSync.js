@@ -53,9 +53,28 @@
         console.error('[FirebaseSync Error]: Không thể khởi tạo Firebase.', err);
     }
 
+    // Firebase Realtime Database CẤM các ký tự . # $ [ ] trong key. Vì tài khoản giờ có dạng
+    // "abc@game4nguoi.com" (chứa dấu chấm), phải encode trước khi dùng làm key, decode khi cần hiển thị lại.
+    function encodeUserKey(username) {
+        return String(username)
+            .replace(/\./g, '__DOT__')
+            .replace(/#/g, '__HASH__')
+            .replace(/\$/g, '__DOLLAR__')
+            .replace(/\[/g, '__LB__')
+            .replace(/\]/g, '__RB__');
+    }
+    function decodeUserKey(key) {
+        return String(key)
+            .replace(/__DOT__/g, '.')
+            .replace(/__HASH__/g, '#')
+            .replace(/__DOLLAR__/g, '$')
+            .replace(/__LB__/g, '[')
+            .replace(/__RB__/g, ']');
+    }
+
     // Các tham chiếu bảng dữ liệu
     const REF_USERS = () => db.ref('users');
-    const REF_USER = (username) => db.ref('users/' + username);
+    const REF_USER = (username) => db.ref('users/' + encodeUserKey(username));
     const REF_KICKS = (sessionId) => db.ref('kicks/' + sessionId);
 
     // ========================================================================
@@ -188,11 +207,19 @@
                 }
 
                 // Không ai đang dùng -> đăng nhập bình thường (chỉ cập nhật tên xưng hô/nickname,
-                // KHÔNG cho đổi tên định danh qua login vì nó là khóa xác thực)
+                // KHÔNG cho đổi tên định danh qua login vì nó là khóa xác thực).
+                // Tài khoản gốc (ROOT_ADMIN_USERNAME) LUÔN được đảm bảo là cấp 5, kể cả khi dữ liệu cũ
+                // trong Firebase (từ lần thử nghiệm trước) đang lưu level khác — tự sửa lại cho đúng.
+                const isRootLogin = (username === ROOT_ADMIN_USERNAME);
                 userData.nickname = nickname || userData.nickname;
-                return REF_USER(username).update({
-                    nickname: userData.nickname
-                }).then(function () {
+                const updates = { nickname: userData.nickname };
+                if (isRootLogin) {
+                    updates.level = 5;
+                    updates.isAdmin = true;
+                    userData.level = 5;
+                    userData.isAdmin = true;
+                }
+                return REF_USER(username).update(updates).then(function () {
                     return window.FirebaseSync._claimSession(username, userData);
                 }).then(function () {
                     return { status: 'ok', user: userData };
@@ -220,11 +247,17 @@
 
                 const oldSessionId = userData.activeSession ? userData.activeSession.sessionId : null;
 
+                const isRootLogin = (username === ROOT_ADMIN_USERNAME);
                 userData.nickname = nickname || userData.nickname;
+                const updates = { nickname: userData.nickname };
+                if (isRootLogin) {
+                    updates.level = 5;
+                    updates.isAdmin = true;
+                    userData.level = 5;
+                    userData.isAdmin = true;
+                }
 
-                return REF_USER(username).update({
-                    nickname: userData.nickname
-                }).then(function () {
+                return REF_USER(username).update(updates).then(function () {
                     return window.FirebaseSync._claimSession(username, userData);
                 }).then(function () {
                     // Đánh dấu phiên cũ bị kick — máy cũ đang lắng nghe sẽ nhận được ngay
