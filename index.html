@@ -9,9 +9,9 @@
         html, body { height: 100%; }
         body { background: #121212; color: #fff; min-height: 100vh; padding: 0; position: relative; }
         .page-wrap { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
-        .container { width: 100%; max-width: none; background: #1e1e1e; padding: 22px 32px; border-radius: 0; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
-        .container.auth-mode { max-width: 620px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-        h1 { text-align: center; color: #ff9800; margin-bottom: 20px; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        .container { width: 100%; max-width: none; background: #1e1e1e; padding: 0; border-radius: 0; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
+        .container.auth-mode { padding: 22px 32px; max-width: 620px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        h1 { text-align: center; color: #ff9800; margin: 18px 0 20px; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
         .screen { display: none; } .screen.active { display: block; }
         
         /* FORM ĐĂNG NHẬP */
@@ -33,11 +33,12 @@
         .username-suffix { background: #333; color: #aaa; padding: 10px 10px; font-size: 13px; white-space: nowrap; display: flex; align-items: center; }
 
         /* BỐ CỤC: CHAT (GÓC TRÊN-TRÁI, GỌN) — 6 NÚT MENU (GIỮA) — CỘT PHẢI (user/thông báo/tiện ích/quyền hạn) */
-        .game-layout { display: flex; gap: 18px; flex: 1; align-items: flex-start; min-height: 0; width: 100%; }
+        .game-layout { display: flex; gap: 0; flex: 1; align-items: flex-start; min-height: 0; width: 100%; }
 
         .chat-sidebar {
             flex: 0 0 300px; max-width: 300px; height: 300px;
-            background: #181818; border: 1px solid #333; border-radius: 8px;
+            background: #181818; border: 1px solid #333; border-left: none; border-top: none;
+            border-radius: 0 0 8px 0;
             padding: 10px; display: flex; flex-direction: column;
             box-shadow: 0 4px 14px rgba(0,0,0,0.5);
         }
@@ -72,7 +73,7 @@
         .emoji-item:hover { transform: scale(1.3); }
 
         /* CỘT GIỮA — CHỈ 6 NÚT MENU CHÍNH */
-        .menu-center { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; align-self: stretch; }
+        .menu-center { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; align-self: stretch; padding: 0 16px; }
 
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex: 1; align-content: start; }
         .menu-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 26px 14px; text-align: center; cursor: pointer; transition: 0.15s; }
@@ -80,35 +81,50 @@
         .menu-item .menu-icon { font-size: 32px; display: block; margin-bottom: 8px; }
         .menu-item .menu-label { font-size: 13px; color: #ddd; font-weight: bold; }
 
-        /* CỘT PHẢI — GỘP: user rút gọn (xưng hô đổi được + kết nối), thông báo, tiện ích, quyền hạn */
-        .side-utils { flex: 0 0 280px; max-width: 280px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-        .user-card { background: #1a1a1a; padding: 12px 14px; border-radius: 6px; border-left: 4px solid #4caf50; }
-        .user-card p { font-size: 13px; margin-bottom: 4px; color: #ddd; }
+        /* CỘT PHẢI — GỘP: user rút gọn (xưng hô đổi được + kết nối), thông báo, tiện ích, quyền hạn — thu gọn, dí sát mép phải */
+        .side-utils {
+            flex: 0 0 240px; max-width: 240px; height: 300px;
+            background: #181818; border: 1px solid #333; border-right: none; border-top: none;
+            border-radius: 0 0 0 8px;
+            padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        }
+        .user-card { background: #1a1a1a; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #4caf50; }
+        .user-card p { font-size: 12px; margin-bottom: 3px; color: #ddd; }
         .user-card span { color: #ff9800; font-weight: bold; }
         .nickname-editable { cursor: pointer; border-bottom: 1px dashed #ff9800; }
         .nickname-editable:hover { color: #ffb74d; }
-        .nickname-edit-input { background: #111; border: 1px solid #ff9800; color: #fff; border-radius: 4px; padding: 2px 6px; font-size: 13px; font-weight: bold; width: 120px; }
+        .nickname-edit-input { background: #111; border: 1px solid #ff9800; color: #fff; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: bold; width: 100px; }
 
-        .announcement-box { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px 14px; }
-        .announcement-box h4 { color: #ff9800; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .announcement-content { font-size: 13px; color: #ccc; line-height: 1.4; background: #111; padding: 8px; border-radius: 4px; border-left: 3px solid #ff9800; min-height: 45px; }
+        .announcement-box { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 8px 10px; }
+        .announcement-box h4 { color: #ff9800; font-size: 12px; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .announcement-content { font-size: 11px; color: #ccc; line-height: 1.4; background: #111; padding: 6px; border-radius: 4px; border-left: 3px solid #ff9800; min-height: 32px; }
 
-        .util-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px 14px; }
-        .util-box h4 { color: #4fc3f7; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .util-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-        .util-list li { background: #222; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #ccc; cursor: pointer; transition: 0.15s; }
+        /* ACCORDION — dùng chung cho Tiện Ích Nhanh / Quyền Hạn / Trạng Thái Server / Giám Sát Admin.
+           Bấm vào tiêu đề (.accordion-header) để trượt mở/đóng phần nội dung (.accordion-body). */
+        .util-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+        .accordion-header { padding: 8px 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
+        .accordion-header h4 { color: #4fc3f7; font-size: 12px; display: flex; align-items: center; gap: 5px; margin: 0; }
+        .accordion-arrow { font-size: 10px; color: #888; transition: transform 0.25s ease; }
+        .util-box.open .accordion-arrow { transform: rotate(90deg); }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+        .util-box.open .accordion-body { max-height: 500px; }
+        .accordion-body-inner { padding: 0 10px 10px; }
+
+        .util-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .util-list li { background: #222; border-radius: 6px; padding: 6px 8px; font-size: 11px; color: #ccc; cursor: pointer; transition: 0.15s; }
         .util-list li:hover { background: #2c2c2c; color: #fff; }
         .online-count { color: #4caf50; font-weight: bold; }
 
-        /* GIÁM SÁT ADMIN (chỉ Admin cấp 5 thấy) — theo dõi phòng chat riêng đang hoạt động */
-        .monitor-box { display: none; background: #241a1a; border: 1px solid #e53935; border-radius: 8px; padding: 12px 14px; }
+        /* GIÁM SÁT ADMIN (chỉ Admin cấp 5 thấy) — dùng accordion .util-box, viền đỏ riêng để nổi bật */
+        .monitor-box { display: none; border-color: #e53935; }
         .monitor-box.active { display: block; }
-        .monitor-box h4 { color: #ff5252; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .monitor-empty { font-size: 12px; color: #888; font-style: italic; }
-        .monitor-room { background: #1c1414; border: 1px solid #442; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: 0.15s; }
+        .monitor-box .accordion-header h4 { color: #ff5252; }
+        .monitor-empty { font-size: 11px; color: #888; font-style: italic; }
+        .monitor-room { background: #1c1414; border: 1px solid #442; border-radius: 6px; padding: 6px 8px; margin-bottom: 5px; cursor: pointer; transition: 0.15s; }
         .monitor-room:hover { background: #2a1e1e; border-color: #e53935; }
-        .monitor-room .mr-name { font-size: 12px; color: #ff8a80; font-weight: bold; }
-        .monitor-room .mr-info { font-size: 11px; color: #aaa; margin-top: 2px; }
+        .monitor-room .mr-name { font-size: 11px; color: #ff8a80; font-weight: bold; }
+        .monitor-room .mr-info { font-size: 10px; color: #aaa; margin-top: 2px; }
 
         .badge-admin { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .badge-user { background: #4caf50; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
@@ -118,16 +134,14 @@
         .badge-lv4 { background: #ff9800; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .badge-lv5 { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
 
-        /* PANEL QUYỀN HẠN (hiện cấp bậc hiện tại; bảng gán cấp chỉ Cấp 4/5 mới thấy) */
-        .permission-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px 14px; }
-        .permission-box h4 { color: #ba68c8; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .permission-summary { font-size: 12px; color: #ccc; margin-bottom: 8px; line-height: 1.5; }
+        /* PANEL QUYỀN HẠN (dùng accordion .util-box; bảng gán cấp chỉ Cấp 4/5 mới thấy) */
+        .permission-summary { font-size: 11px; color: #ccc; margin-bottom: 8px; line-height: 1.5; }
 
-        .admin-panel { display: none; background: #1f1a24; border: 1px solid #9c27b0; border-radius: 6px; padding: 10px 12px; margin-top: 8px; }
+        .admin-panel { display: none; background: #1f1a24; border: 1px solid #9c27b0; border-radius: 6px; padding: 8px 10px; margin-top: 6px; }
         .admin-panel.active { display: block; }
-        .admin-panel h4 { color: #e040fb; font-size: 12px; margin-bottom: 8px; }
-        .admin-controls { display: flex; flex-direction: column; gap: 8px; }
-        .admin-input { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
+        .admin-panel h4 { color: #e040fb; font-size: 11px; margin-bottom: 6px; }
+        .admin-controls { display: flex; flex-direction: column; gap: 6px; }
+        .admin-input { padding: 6px; font-size: 11px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
 
         /* 4 CHẤM ẨN Ở 4 GÓC MÀN HÌNH — chỉ góc DƯỚI-TRÁI có tác dụng, 3 chấm còn lại là ngụy trang */
         .secret-dot-hitbox { position: fixed; width: 60px; height: 60px; cursor: default; z-index: 99999; background: transparent; }
@@ -155,8 +169,9 @@
 
         @media (max-width: 1000px) {
             .game-layout { flex-direction: column; }
-            .chat-sidebar { max-width: none; flex: 0 0 320px; }
-            .side-utils { max-width: none; flex: 0 0 auto; }
+            .chat-sidebar { max-width: none; flex: 0 0 320px; width: 100%; border-radius: 0; }
+            .side-utils { max-width: none; flex: 0 0 auto; width: 100%; height: auto; border-radius: 0; }
+            .menu-center { padding: 12px; }
             .menu-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
@@ -170,20 +185,29 @@
 <div class="secret-dot-hitbox pos-tl" id="secret-decoy-tl"><div class="secret-dot"></div></div>
 <div class="secret-dot-hitbox pos-tr" id="secret-decoy-tr"><div class="secret-dot"></div></div>
 
-<!-- MODAL: ĐĂNG NHẬP ADMIN ẨN — giao diện giống hệt form đăng nhập thường, có ô Xưng hô tự đặt.
-     Vẫn phải đúng CẢ 3: Tên định danh, Tài khoản, Mật khẩu = luuw mới vào được. -->
+<!-- MODAL: ĐĂNG NHẬP ADMIN ẨN — giao diện giống HỆT form đăng nhập thường (label, ghi chú, nút xanh).
+     Xưng hô nhập gì cũng được. Riêng Tên định danh, Tài khoản, Mật khẩu bắt buộc phải là "luuw" cả 3 mới vào được. -->
 <div class="modal-overlay" id="modal-secret-admin">
-    <div class="modal-box" style="max-width: 420px;">
-        <h3>🔐 Đăng Nhập</h3>
-        <input type="text" id="secret-nickname" placeholder="Xưng hô / Tên hiển thị..." autocomplete="off">
-        <input type="text" id="secret-fullname" placeholder="Tên định danh" autocomplete="off">
-        <input type="text" id="secret-username" placeholder="Tài khoản đăng nhập" autocomplete="off">
-        <input type="password" id="secret-password" placeholder="Mật khẩu bảo mật" autocomplete="off">
-        <div class="modal-error" id="secret-admin-error">Thông tin không chính xác!</div>
-        <div class="modal-actions">
-            <button class="btn-gray" id="secret-admin-cancel">Huỷ</button>
-            <button class="btn-green" id="secret-admin-confirm" style="width:auto; margin-top:0;">Đăng Nhập</button>
+    <div class="modal-box" style="max-width: 460px;">
+        <div class="form-group">
+            <label>1. Xưng hô / Tên hiển thị (nhập gì cũng được, chỉ để hiển thị khi chat):</label>
+            <input type="text" id="secret-nickname" placeholder="Ví dụ: Đại Hiệp, Bang Chủ..." autocomplete="off">
         </div>
+        <div class="form-group">
+            <label>2. Tên định danh (Tên thật để lưu tiến trình):</label>
+            <input type="text" id="secret-fullname" placeholder="Nhập tên định danh..." autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>3. Tài khoản đăng nhập:</label>
+            <input type="text" id="secret-username" placeholder="Nhập tên tài khoản..." autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>4. Mật khẩu bảo mật:</label>
+            <input type="password" id="secret-password" placeholder="Nhập mật khẩu..." autocomplete="off">
+        </div>
+        <div class="modal-error" id="secret-admin-error">Thông tin không chính xác!</div>
+        <button id="secret-admin-confirm" class="btn-green">ĐĂNG NHẬP VÀO GAME</button>
+        <button id="secret-admin-cancel" class="btn-gray" style="width:100%; margin-top:8px;">Huỷ</button>
     </div>
 </div>
 
@@ -355,55 +379,85 @@
                     </div>
                 </div>
 
-                <div class="util-box">
-                    <h4>🌐 Trạng Thái Server</h4>
-                    <p style="font-size:12px; color:#ccc;">Người online: <span class="online-count" id="online-count-text">Đang cập nhật...</span></p>
-                </div>
-
-                <div class="util-box">
-                    <h4>📋 Tiện Ích Nhanh</h4>
-                    <ul class="util-list">
-                        <li id="util-daily-checkin">✅ Điểm Danh Hằng Ngày</li>
-                        <li id="util-inventory">🎒 Kho Đồ Của Tôi</li>
-                        <li id="util-shop">🛒 Cửa Hàng Vật Phẩm</li>
-                        <li id="util-report">🚩 Báo Cáo Vi Phạm</li>
-                        <li id="util-help">❓ Trợ Giúp / Hướng Dẫn</li>
-                    </ul>
-                </div>
-
-                <!-- QUYỀN HẠN CỦA BẠN — luôn hiện cấp bậc hiện tại; bảng gán cấp chỉ Cấp 4/5 mới thấy -->
-                <div class="permission-box">
-                    <h4>🛡️ Quyền Hạn Của Bạn</h4>
-                    <div class="permission-summary" id="permission-summary">Cấp 1 — Thành viên thường.</div>
-
-                    <div class="admin-panel" id="admin-panel">
-                        <h4 id="admin-panel-title">BẢNG CẤP QUYỀN</h4>
-                        <div class="admin-controls">
-                            <input type="text" id="admin-broadcast-input" class="admin-input" placeholder="Nhập thông báo gửi toàn Server..." style="display:none;">
-                            <button class="tool-btn btn-purple" id="btn-admin-broadcast" style="display:none;">Đăng Thông Báo Server</button>
-
-                            <div style="display:flex; gap:5px; margin-top: 5px; align-items:center; flex-wrap: wrap;">
-                                <input type="text" id="admin-target-user" class="admin-input" placeholder="Tài khoản..." style="flex:1; min-width:90px;">
-                                <select id="admin-target-level" class="admin-input" style="flex:0 0 70px;">
-                                    <option value="1">Cấp 1</option>
-                                    <option value="2">Cấp 2</option>
-                                    <option value="3">Cấp 3</option>
-                                    <option value="4">Cấp 4</option>
-                                    <option value="5">Cấp 5</option>
-                                </select>
-                                <button class="tool-btn btn-purple" id="btn-admin-set-level">Gán</button>
-                            </div>
-                            <span style="font-size:11px; color:#aaa;" id="admin-level-hint"></span>
+                <!-- ACCORDION: Trạng Thái Server -->
+                <div class="util-box" data-accordion>
+                    <div class="accordion-header">
+                        <h4>🌐 Trạng Thái Server</h4>
+                        <span class="accordion-arrow">▶</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-inner">
+                            <p style="font-size:11px; color:#ccc;">Người online: <span class="online-count" id="online-count-text">Đang cập nhật...</span></p>
                         </div>
                     </div>
                 </div>
 
-                <!-- GIÁM SÁT ADMIN — chỉ Admin (Cấp 5) thấy. Theo dõi phòng chat riêng đang có người tạo/hoạt động,
-                     bấm vào phòng để vào xem trực tiếp. Các cấp khác (1-4) không có mục này. -->
-                <div class="monitor-box" id="monitor-box">
-                    <h4>👁️ Giám Sát Admin</h4>
-                    <div id="monitor-room-list">
-                        <div class="monitor-empty" id="monitor-empty-text">Chưa có phòng chat riêng nào được tạo.</div>
+                <!-- ACCORDION: Tiện Ích Nhanh -->
+                <div class="util-box" data-accordion>
+                    <div class="accordion-header">
+                        <h4>📋 Tiện Ích Nhanh</h4>
+                        <span class="accordion-arrow">▶</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-inner">
+                            <ul class="util-list">
+                                <li id="util-daily-checkin">✅ Điểm Danh Hằng Ngày</li>
+                                <li id="util-inventory">🎒 Kho Đồ Của Tôi</li>
+                                <li id="util-shop">🛒 Cửa Hàng Vật Phẩm</li>
+                                <li id="util-report">🚩 Báo Cáo Vi Phạm</li>
+                                <li id="util-help">❓ Trợ Giúp / Hướng Dẫn</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACCORDION: Quyền Hạn Của Bạn — luôn hiện cấp bậc hiện tại; bảng gán cấp chỉ Cấp 4/5 mới thấy -->
+                <div class="util-box" data-accordion>
+                    <div class="accordion-header">
+                        <h4>🛡️ Quyền Hạn Của Bạn</h4>
+                        <span class="accordion-arrow">▶</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-inner">
+                            <div class="permission-summary" id="permission-summary">Cấp 1 — Thành viên thường.</div>
+
+                            <div class="admin-panel" id="admin-panel">
+                                <h4 id="admin-panel-title">BẢNG CẤP QUYỀN</h4>
+                                <div class="admin-controls">
+                                    <input type="text" id="admin-broadcast-input" class="admin-input" placeholder="Nhập thông báo gửi toàn Server..." style="display:none;">
+                                    <button class="tool-btn btn-purple" id="btn-admin-broadcast" style="display:none;">Đăng Thông Báo Server</button>
+
+                                    <div style="display:flex; gap:5px; margin-top: 5px; align-items:center; flex-wrap: wrap;">
+                                        <input type="text" id="admin-target-user" class="admin-input" placeholder="Tài khoản..." style="flex:1; min-width:80px;">
+                                        <select id="admin-target-level" class="admin-input" style="flex:0 0 62px;">
+                                            <option value="1">Cấp 1</option>
+                                            <option value="2">Cấp 2</option>
+                                            <option value="3">Cấp 3</option>
+                                            <option value="4">Cấp 4</option>
+                                            <option value="5">Cấp 5</option>
+                                        </select>
+                                        <button class="tool-btn btn-purple" id="btn-admin-set-level">Gán</button>
+                                    </div>
+                                    <span style="font-size:10px; color:#aaa;" id="admin-level-hint"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACCORDION: Giám Sát Admin — chỉ Admin (Cấp 5) thấy. Theo dõi phòng chat riêng đang có người
+                     tạo/hoạt động, bấm vào phòng để vào xem trực tiếp. Các cấp khác (1-4) không có mục này. -->
+                <div class="util-box monitor-box" id="monitor-box" data-accordion>
+                    <div class="accordion-header">
+                        <h4>👁️ Giám Sát Admin</h4>
+                        <span class="accordion-arrow">▶</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-inner">
+                            <div id="monitor-room-list">
+                                <div class="monitor-empty" id="monitor-empty-text">Chưa có phòng chat riêng nào được tạo.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -853,6 +907,14 @@
         const sidebar = document.getElementById('chat-sidebar');
         sidebar.classList.toggle('collapsed');
         this.innerText = sidebar.classList.contains('collapsed') ? '▸' : '▾';
+    });
+
+    // 4b-2. ACCORDION cho các mục ở cột phải (Trạng Thái Server / Tiện Ích Nhanh / Quyền Hạn / Giám Sát Admin)
+    // — bấm vào tiêu đề để trượt mở/đóng, tiết kiệm không gian.
+    document.querySelectorAll('.util-box[data-accordion] .accordion-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            header.closest('.util-box').classList.toggle('open');
+        });
     });
 
     // 4c. CÁC MỤC MENU CHÍNH
