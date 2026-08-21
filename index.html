@@ -11,7 +11,7 @@
         .page-wrap { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
         .container { width: 100%; max-width: none; background: #1e1e1e; padding: 0; border-radius: 0; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
         .container.auth-mode { padding: 22px 32px; max-width: 620px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-        h1 { text-align: center; color: #ff9800; margin: 18px 0 20px; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        h1 { text-align: center; color: #ff9800; margin: 14px 0; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
         .screen { display: none; } .screen.active { display: block; }
         
         /* FORM ĐĂNG NHẬP */
@@ -83,10 +83,10 @@
 
         /* CỘT PHẢI — GỘP: user rút gọn (xưng hô đổi được + kết nối), thông báo, tiện ích, quyền hạn — thu gọn, dí sát mép phải */
         .side-utils {
-            flex: 0 0 240px; max-width: 240px; height: 300px;
+            flex: 0 0 240px; max-width: 240px; min-height: 300px;
             background: #181818; border: 1px solid #333; border-right: none; border-top: none;
             border-radius: 0 0 0 8px;
-            padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+            padding: 10px; display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 4px 14px rgba(0,0,0,0.5);
         }
         .user-card { background: #1a1a1a; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #4caf50; }
@@ -515,7 +515,7 @@
 
     let currentUser = null;
     let currentTopic = GLOBAL_TOPIC;
-    let userPermissions = { isAdmin: false };
+    let userPermissions = { level: 1, isRootAdmin: false };
 
     // Lưu tạm thông tin lần đăng nhập gần nhất (dùng khi cần hỏi xác nhận xung đột phiên)
     let _pendingLogin = null;
@@ -692,39 +692,50 @@
     });
 
     function finalizeLogin(user, fullname, nick, userData) {
-        // Cấp bậc: ưu tiên field 'level' (1-5); nếu tài khoản cũ chưa có level, suy ra từ isAdmin
-        let level = (userData && typeof userData.level === 'number') ? userData.level : ((userData && userData.isAdmin) ? 5 : 1);
+        // Cấp bậc 1-5 (thang điểm thường) — KHÔNG liên quan đến Admin
+        let level = (userData && typeof userData.level === 'number') ? userData.level : 1;
+        // Admin (tài khoản gốc luuw): vai trò TÁCH BIỆT hoàn toàn khỏi thang 1-5, có quyền đặc biệt riêng
+        let isRootAdmin = !!(userData && userData.isRootAdmin);
+
         userPermissions.level = level;
-        userPermissions.isAdmin = (level >= 5);
+        userPermissions.isRootAdmin = isRootAdmin;
         currentUser = { username: user, fullname: fullname, nickname: nick };
 
         document.getElementById('display-nickname').innerText = nick;
 
         const roleBadge = document.getElementById('display-role-badge');
-        // Cấp 5 hiển thị "Admin" thay vì "Cấp 5" — các cấp khác hiển thị "Cấp N"
-        const LEVEL_LABELS = { 1: 'Cấp 1', 2: 'Cấp 2', 3: 'Cấp 3', 4: 'Cấp 4', 5: 'Admin' };
-        roleBadge.innerText = LEVEL_LABELS[level] || 'Cấp 1';
-        roleBadge.className = 'badge-lv' + level;
+        if (isRootAdmin) {
+            roleBadge.innerText = 'Admin';
+            roleBadge.className = 'badge-admin';
+        } else {
+            const LEVEL_LABELS = { 1: 'Cấp 1', 2: 'Cấp 2', 3: 'Cấp 3', 4: 'Cấp 4', 5: 'Cấp 5' };
+            roleBadge.innerText = LEVEL_LABELS[level] || 'Cấp 1';
+            roleBadge.className = 'badge-lv' + level;
+        }
 
         const permSummary = document.getElementById('permission-summary');
-        const PERM_TEXT = {
-            1: 'Cấp 1 — Thành viên thường.',
-            2: 'Cấp 2 — Thành viên thường.',
-            3: 'Cấp 3 — Thành viên thường.',
-            4: 'Cấp 4 — Điều hành: được gán Cấp 1-3 cho người khác.',
-            5: 'Admin — Toàn quyền, gán được mọi cấp 1-5, xem được Giám Sát Admin.'
-        };
-        permSummary.innerText = PERM_TEXT[level] || PERM_TEXT[1];
+        if (isRootAdmin) {
+            permSummary.innerText = 'Admin — Toàn quyền tối cao: gán được mọi cấp 1-5, xem Giám Sát Admin, sửa Thông Báo Máy Chủ, và các quyền đặc biệt khác mà Cấp 5 không có.';
+        } else {
+            const PERM_TEXT = {
+                1: 'Cấp 1 — Thành viên thường.',
+                2: 'Cấp 2 — Thành viên thường.',
+                3: 'Cấp 3 — Thành viên thường.',
+                4: 'Cấp 4 — Điều hành: được gán Cấp 1-3 cho người khác.',
+                5: 'Cấp 5 — Điều hành cấp cao: được gán mọi cấp 1-5 cho người khác (không có quyền đặc biệt riêng của Admin).'
+            };
+            permSummary.innerText = PERM_TEXT[level] || PERM_TEXT[1];
+        }
 
-        // Chỉ Cấp 4 và Cấp 5 mới thấy panel cấp quyền
-        if (level >= 4) {
+        // Panel cấp quyền: Admin và Cấp 4/5 mới thấy
+        if (isRootAdmin || level >= 4) {
             ui.adminPanel.classList.add('active');
             const hint = document.getElementById('admin-level-hint');
             const levelSelect = document.getElementById('admin-target-level');
             const broadcastInput = document.getElementById('admin-broadcast-input');
             const broadcastBtn = document.getElementById('btn-admin-broadcast');
-            if (level === 5) {
-                document.getElementById('admin-panel-title').innerText = 'BẢNG CẤP QUYỀN (Admin)';
+            if (isRootAdmin || level === 5) {
+                document.getElementById('admin-panel-title').innerText = isRootAdmin ? 'BẢNG CẤP QUYỀN (Admin)' : 'BẢNG CẤP QUYỀN (Cấp 5)';
                 hint.innerText = 'Bạn có thể gán mọi cấp (1-5) cho bất kỳ ai.';
                 for (let i = 0; i < levelSelect.options.length; i++) levelSelect.options[i].disabled = false;
                 broadcastInput.style.display = ''; broadcastBtn.style.display = '';
@@ -740,8 +751,8 @@
             ui.adminPanel.classList.remove('active');
         }
 
-        // GIÁM SÁT ADMIN — chỉ Admin (Cấp 5) mới thấy mục này, các cấp khác (kể cả Cấp 4) không có
-        if (level >= 5) {
+        // GIÁM SÁT ADMIN — CHỈ ADMIN (tài khoản gốc) mới thấy mục này, kể cả Cấp 5 cũng không có
+        if (isRootAdmin) {
             ui.monitorBox.classList.add('active');
         } else {
             ui.monitorBox.classList.remove('active');
@@ -765,8 +776,8 @@
                 if (isOnline) {
                     window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
                     window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
-                    // Admin luôn lắng nghe kênh đăng ký phòng để hiển thị Giám Sát Admin
-                    if (userPermissions.level >= 5) {
+                    // Chỉ Admin lắng nghe kênh đăng ký phòng để hiển thị Giám Sát Admin
+                    if (userPermissions.isRootAdmin) {
                         window.NetworkManager.joinRoom(ROOM_REGISTRY_TOPIC, currentUser.nickname);
                     }
                 }
@@ -878,9 +889,9 @@
         }
     });
 
-    // 4. ADMIN BroadCast & Grant (qua Firebase)
+    // 4. ADMIN BroadCast (qua Firebase) — Admin và Cấp 5 đều thấy nút này (đã ẩn/hiện ở finalizeLogin)
     document.getElementById('btn-admin-broadcast').addEventListener('click', function() {
-        if (!userPermissions.isAdmin) return;
+        if (!userPermissions.isRootAdmin && userPermissions.level < 5) return;
         const msg = document.getElementById('admin-broadcast-input').value.trim();
         if (msg) {
             window.NetworkManager.sendChat(SYSTEM_ANNOUNCE_TOPIC, 'HỆ THỐNG ADMIN', msg, 'announcement');
@@ -889,12 +900,12 @@
     });
 
     document.getElementById('btn-admin-set-level').addEventListener('click', function() {
-        if (!userPermissions.level || userPermissions.level < 4) return;
+        if (!userPermissions.isRootAdmin && (!userPermissions.level || userPermissions.level < 4)) return;
         const targetUser = document.getElementById('admin-target-user').value.trim();
         const targetLevel = parseInt(document.getElementById('admin-target-level').value, 10);
         if (!targetUser) return alert("Nhập tên tài khoản cần gán cấp!");
 
-        window.FirebaseSync.setLevel(userPermissions.level, targetUser, targetLevel).then(function (result) {
+        window.FirebaseSync.setLevel(userPermissions, targetUser, targetLevel).then(function (result) {
             if (result.status === 'not_found') return alert("❌ Không tìm thấy tài khoản!");
             if (result.status === 'forbidden') return alert("⛔ Bạn không đủ quyền để gán cấp này!");
             alert(`✅ Đã gán Cấp ${targetLevel} cho [${targetUser}]!`);
@@ -933,12 +944,13 @@
     document.getElementById('menu-profile').addEventListener('click', function() {
         if (!currentUser) return;
         const lv = userPermissions.level || 1;
+        const rankText = userPermissions.isRootAdmin ? 'Admin (toàn quyền tối cao)' : `Cấp ${lv}${lv === 4 ? ' (Điều hành)' : (lv === 5 ? ' (Điều hành cấp cao)' : '')}`;
         alert(
             `🪪 HỒ SƠ CỦA TÔI\n\n` +
             `Xưng hô: ${currentUser.nickname}\n` +
             `Tên định danh: ${currentUser.fullname}\n` +
             `Tài khoản: ${currentUser.username}\n` +
-            `Cấp bậc: Cấp ${lv}${lv >= 5 ? ' (Admin)' : (lv === 4 ? ' (Điều hành)' : '')}`
+            `Cấp bậc: ${rankText}`
         );
     });
 
