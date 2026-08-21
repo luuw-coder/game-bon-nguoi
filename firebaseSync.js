@@ -169,14 +169,16 @@
             return REF_USER(username).once('value').then(function (snapshot) {
                 if (!snapshot.exists()) {
                     // Tài khoản chưa tồn tại -> tạo mới
-                    // Tài khoản gốc (ROOT_ADMIN_USERNAME) tự động là cấp 5 (Admin)
+                    // Tài khoản gốc (ROOT_ADMIN_USERNAME) là ADMIN — vai trò TÁCH BIỆT HOÀN TOÀN khỏi
+                    // thang cấp 1-5 (không phải "Cấp 5"). level vẫn để mặc định 1 vì Admin không dùng
+                    // thang điểm đó; quyền của Admin được kiểm tra qua isRootAdmin riêng.
                     const isRoot = (username === ROOT_ADMIN_USERNAME);
                     const newUser = {
                         password: password,
                         fullname: fullname,
                         nickname: nickname,
-                        level: isRoot ? 5 : 1,
-                        isAdmin: isRoot,
+                        level: 1,
+                        isRootAdmin: isRoot,
                         activeSession: null
                     };
                     return REF_USER(username).set(newUser).then(function () {
@@ -208,16 +210,14 @@
 
                 // Không ai đang dùng -> đăng nhập bình thường (chỉ cập nhật tên xưng hô/nickname,
                 // KHÔNG cho đổi tên định danh qua login vì nó là khóa xác thực).
-                // Tài khoản gốc (ROOT_ADMIN_USERNAME) LUÔN được đảm bảo là cấp 5, kể cả khi dữ liệu cũ
-                // trong Firebase (từ lần thử nghiệm trước) đang lưu level khác — tự sửa lại cho đúng.
+                // Tài khoản gốc (ROOT_ADMIN_USERNAME) LUÔN được đảm bảo cờ isRootAdmin=true, kể cả khi
+                // dữ liệu cũ trong Firebase (từ lần thử nghiệm trước) chưa có cờ này — tự sửa lại cho đúng.
                 const isRootLogin = (username === ROOT_ADMIN_USERNAME);
                 userData.nickname = nickname || userData.nickname;
                 const updates = { nickname: userData.nickname };
                 if (isRootLogin) {
-                    updates.level = 5;
-                    updates.isAdmin = true;
-                    userData.level = 5;
-                    userData.isAdmin = true;
+                    updates.isRootAdmin = true;
+                    userData.isRootAdmin = true;
                 }
                 return REF_USER(username).update(updates).then(function () {
                     return window.FirebaseSync._claimSession(username, userData);
@@ -251,10 +251,8 @@
                 userData.nickname = nickname || userData.nickname;
                 const updates = { nickname: userData.nickname };
                 if (isRootLogin) {
-                    updates.level = 5;
-                    updates.isAdmin = true;
-                    userData.level = 5;
-                    userData.isAdmin = true;
+                    updates.isRootAdmin = true;
+                    userData.isRootAdmin = true;
                 }
 
                 return REF_USER(username).update(updates).then(function () {
@@ -339,54 +337,41 @@
         },
 
         // --- QUYỀN THEO CẤP BẬC (1-5) ---
-        // Cấp 5 (Admin gốc): gán được mọi cấp 1-5 cho bất kỳ ai.
+        // Admin (tài khoản gốc luuw): TÁCH BIỆT hoàn toàn khỏi thang 1-5, gán được mọi cấp 1-5 cho bất kỳ ai,
+        //   cộng thêm các quyền đặc biệt riêng (Giám Sát, sửa Thông Báo Máy Chủ, v.v.) mà Cấp 5 không có.
+        // Cấp 5: là cấp CAO NHẤT trong thang 1-5, gán được cấp 1-5 cho người khác, nhưng KHÔNG có các
+        //   quyền đặc biệt riêng của Admin.
         // Cấp 4: gán được tối đa cấp 3 (không thể gán cấp 4 hoặc 5).
         // Cấp 1-3: không có quyền gán cấp cho ai.
         //
+        // actor = { level: number, isRootAdmin: boolean } — thông tin người đang thực hiện thao tác gán cấp.
         // Trả về Promise, resolve với:
         //   { status: 'ok' }
         //   { status: 'not_found' }          -> không tìm thấy tài khoản đích
         //   { status: 'forbidden' }           -> người gọi không đủ quyền gán cấp này
-        setLevel: function (actorLevel, targetUsername, newLevel) {
+        setLevel: function (actor, targetUsername, newLevel) {
             if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+
+            const actorLevel = (actor && actor.level) || 1;
+            const actorIsRootAdmin = !!(actor && actor.isRootAdmin);
 
             newLevel = parseInt(newLevel, 10);
             if (isNaN(newLevel) || newLevel < 1 || newLevel > 5) {
                 return Promise.resolve({ status: 'forbidden' });
             }
-            if (actorLevel < 4) {
-                return Promise.resolve({ status: 'forbidden' });
-            }
-            if (actorLevel === 4 && newLevel > 3) {
-                return Promise.resolve({ status: 'forbidden' });
+            // Admin gán được mọi cấp; nếu không phải Admin thì phải là Cấp 4 trở lên mới được gán
+            if (!actorIsRootAdmin) {
+                if (actorLevel < 4) return Promise.resolve({ status: 'forbidden' });
+                if (actorLevel === 4 && newLevel > 3) return Promise.resolve({ status: 'forbidden' });
             }
 
             return REF_USER(targetUsername).once('value').then(function (snapshot) {
                 if (!snapshot.exists()) return { status: 'not_found' };
                 return REF_USER(targetUsername).update({
-                    level: newLevel,
-                    isAdmin: (newLevel >= 5)
+                    level: newLevel
                 }).then(function () {
                     return { status: 'ok' };
                 });
-            });
-        },
-
-        // Giữ lại 2 hàm cũ để tương thích ngược (grantAdmin = set cấp 5, revokeAdmin = set cấp 1)
-        grantAdmin: function (username) {
-            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
-            return REF_USER(username).once('value').then(function (snapshot) {
-                if (!snapshot.exists()) return { status: 'not_found' };
-                return REF_USER(username).update({ isAdmin: true, level: 5 }).then(function () {
-                    return { status: 'ok' };
-                });
-            });
-        },
-
-        revokeAdmin: function (username) {
-            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
-            return REF_USER(username).update({ isAdmin: false, level: 1 }).then(function () {
-                return { status: 'ok' };
             });
         },
 
