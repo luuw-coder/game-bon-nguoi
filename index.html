@@ -11,7 +11,7 @@
         .page-wrap { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
         .container { width: 100%; max-width: none; background: #1e1e1e; padding: 0; border-radius: 0; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
         .container.auth-mode { padding: 22px 32px; max-width: 620px; margin: 0 auto; align-self: center; justify-content: center; min-height: 100vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-        h1 { text-align: center; color: #ff9800; margin: 14px 0; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        h1 { text-align: center; color: #ff9800; margin: 0; padding: 10px 0; font-size: 24px; letter-spacing: 1px; text-transform: uppercase; background: #181818; border-bottom: 1px solid #333; }
         .screen { display: none; } .screen.active { display: block; }
         
         /* FORM ĐĂNG NHẬP */
@@ -72,14 +72,30 @@
         .emoji-item { cursor: pointer; font-size: 18px; transition: 0.2s; }
         .emoji-item:hover { transform: scale(1.3); }
 
-        /* CỘT GIỮA — CHỈ 6 NÚT MENU CHÍNH */
-        .menu-center { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; align-self: stretch; padding: 0 16px; }
+        /* CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC, KIỂU THANH MENU CHÍNH MINECRAFT */
+        .menu-center { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; align-self: stretch; padding: 0 16px; }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex: 1; align-content: start; }
-        .menu-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 26px 14px; text-align: center; cursor: pointer; transition: 0.15s; }
-        .menu-item:hover { background: #2a2a2a; border-color: #ff9800; transform: translateY(-2px); }
-        .menu-item .menu-icon { font-size: 32px; display: block; margin-bottom: 8px; }
-        .menu-item .menu-label { font-size: 13px; color: #ddd; font-weight: bold; }
+        .menu-vertical { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 380px; }
+        .menu-item-v {
+            background: #1a1a1a; border: 2px solid #333; border-radius: 6px;
+            padding: 18px 20px; text-align: center; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+        .menu-item-v:hover { background: #2a2a2a; border-color: #ff9800; transform: translateX(4px); box-shadow: 0 4px 14px rgba(255, 152, 0, 0.18); }
+        .menu-item-v:active { transform: translateX(4px) scale(0.98); }
+        .menu-icon-v { font-size: 24px; }
+        .menu-label-v { font-size: 16px; color: #eee; font-weight: bold; letter-spacing: 1px; }
+
+        /* MODAL CÀI ĐẶT — danh sách con (Hồ Sơ / Bảng Xếp Hạng / Lịch Sử Trận) */
+        .settings-menu { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+        .settings-item {
+            background: #2a2a2a; border: 1px solid #444; border-radius: 6px;
+            padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .settings-item:hover { background: #333; border-color: #ff9800; }
+        .settings-icon { font-size: 18px; }
+        .settings-label { flex: 1; font-size: 14px; color: #ddd; font-weight: bold; }
+        .settings-arrow { color: #888; font-size: 18px; }
 
         /* CỘT PHẢI — GỘP: user rút gọn (xưng hô đổi được + kết nối), thông báo, tiện ích, quyền hạn — thu gọn, dí sát mép phải */
         .side-utils {
@@ -107,8 +123,8 @@
         .accordion-header h4 { color: #4fc3f7; font-size: 12px; display: flex; align-items: center; gap: 5px; margin: 0; }
         .accordion-arrow { font-size: 10px; color: #888; transition: transform 0.25s ease; }
         .util-box.open .accordion-arrow { transform: rotate(90deg); }
-        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-        .util-box.open .accordion-body { max-height: 500px; }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .util-box.open .accordion-body { max-height: 600px; }
         .accordion-body-inner { padding: 0 10px 10px; }
 
         .util-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
@@ -134,6 +150,14 @@
         .badge-lv4 { background: #ff9800; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .badge-lv5 { background: #9c27b0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
 
+        /* Badge cấp bậc nhỏ hiện cạnh tên người gửi trong khung chat */
+        .chat-role-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold; vertical-align: middle; }
+        .chat-role-admin { background: #9c27b0; color: #fff; }
+        .chat-role-lv2 { background: #2196f3; color: #fff; }
+        .chat-role-lv3 { background: #4caf50; color: #fff; }
+        .chat-role-lv4 { background: #ff9800; color: #000; }
+        .chat-role-lv5 { background: #ab47bc; color: #fff; }
+
         /* PANEL QUYỀN HẠN (dùng accordion .util-box; bảng gán cấp chỉ Cấp 4/5 mới thấy) */
         .permission-summary { font-size: 11px; color: #ccc; margin-bottom: 8px; line-height: 1.5; }
 
@@ -142,6 +166,21 @@
         .admin-panel h4 { color: #e040fb; font-size: 11px; margin-bottom: 6px; }
         .admin-controls { display: flex; flex-direction: column; gap: 6px; }
         .admin-input { padding: 6px; font-size: 11px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
+
+        /* TRA CỨU NGƯỜI CHƠI + DANH SÁCH ĐÃ CẤP QUYỀN */
+        .lookup-result { margin-top: 6px; }
+        .lookup-card { background: #111; border: 1px solid #444; border-radius: 6px; padding: 8px; font-size: 11px; color: #ccc; line-height: 1.6; }
+        .lookup-card b { color: #ff9800; }
+        .lookup-card .lc-online { color: #4caf50; font-weight: bold; }
+        .lookup-card .lc-offline { color: #888; }
+
+        .granted-list-header { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; color: #ba68c8; font-weight: bold; }
+        .granted-list-header .tool-btn { padding: 3px 6px; font-size: 11px; }
+        .granted-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #111; border: 1px solid #333; border-radius: 6px; padding: 6px 8px; margin-top: 5px; }
+        .granted-row .gr-info { font-size: 11px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .granted-row .gr-info b { color: #ff9800; }
+        .granted-row .btn-revoke { background: #442222; color: #ff8a80; border: 1px solid #663333; padding: 4px 8px; font-size: 10px; border-radius: 4px; cursor: pointer; flex-shrink: 0; }
+        .granted-row .btn-revoke:hover { background: #663333; color: #fff; }
 
         /* 4 CHẤM ẨN Ở 4 GÓC MÀN HÌNH — chỉ góc DƯỚI-TRÁI có tác dụng, 3 chấm còn lại là ngụy trang */
         .secret-dot-hitbox { position: fixed; width: 60px; height: 60px; cursor: default; z-index: 99999; background: transparent; }
@@ -167,12 +206,25 @@
         .modal-error { color: #f44336; font-size: 12px; margin-top: -6px; margin-bottom: 10px; display: none; }
         .modal-error.active { display: block; }
 
+        /* ========== HIỆU ỨNG CHUNG TOÀN GAME — làm mượt các tương tác (mở/đóng, hover, chuyển màn) ========== */
+        button, .tool-btn, .menu-item, .chat-tab, .util-list li, .monitor-room, input, select {
+            transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+        }
+        button:active, .tool-btn:active, .menu-item:active { transform: scale(0.96); }
+        .screen.active { animation: fadeIn 0.35s ease; }
+        .modal-overlay.active .modal-box { animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        .chat-msg { animation: msgSlideIn 0.25s ease; }
+        @keyframes msgSlideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+        .menu-item:hover { box-shadow: 0 6px 16px rgba(255, 152, 0, 0.15); }
+        .util-box .accordion-header:hover { background: rgba(255,255,255,0.03); }
+
         @media (max-width: 1000px) {
             .game-layout { flex-direction: column; }
             .chat-sidebar { max-width: none; flex: 0 0 320px; width: 100%; border-radius: 0; }
             .side-utils { max-width: none; flex: 0 0 auto; width: 100%; height: auto; border-radius: 0; }
             .menu-center { padding: 12px; }
-            .menu-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -333,32 +385,20 @@
                 </div>
             </div>
 
-            <!-- CỘT GIỮA — CHỈ 6 NÚT MENU CHÍNH -->
+            <!-- CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC KIỂU MINECRAFT (Chọn Game / Cài Đặt / Bạn Bè) -->
             <div class="menu-center">
-                <div class="menu-grid">
-                    <div class="menu-item" id="menu-choose-game">
-                        <span class="menu-icon">🎮</span>
-                        <span class="menu-label">Chọn Game Chơi</span>
+                <div class="menu-vertical">
+                    <div class="menu-item-v" id="menu-choose-game">
+                        <span class="menu-icon-v">🎮</span>
+                        <span class="menu-label-v">CHỌN GAME CHƠI</span>
                     </div>
-                    <div class="menu-item" id="menu-settings">
-                        <span class="menu-icon">⚙️</span>
-                        <span class="menu-label">Cài Đặt</span>
+                    <div class="menu-item-v" id="menu-settings">
+                        <span class="menu-icon-v">⚙️</span>
+                        <span class="menu-label-v">CÀI ĐẶT</span>
                     </div>
-                    <div class="menu-item" id="menu-leaderboard">
-                        <span class="menu-icon">🏆</span>
-                        <span class="menu-label">Bảng Xếp Hạng</span>
-                    </div>
-                    <div class="menu-item" id="menu-friends">
-                        <span class="menu-icon">👥</span>
-                        <span class="menu-label">Bạn Bè</span>
-                    </div>
-                    <div class="menu-item" id="menu-profile">
-                        <span class="menu-icon">🪪</span>
-                        <span class="menu-label">Hồ Sơ Của Tôi</span>
-                    </div>
-                    <div class="menu-item" id="menu-history">
-                        <span class="menu-icon">📜</span>
-                        <span class="menu-label">Lịch Sử Trận</span>
+                    <div class="menu-item-v" id="menu-friends">
+                        <span class="menu-icon-v">👥</span>
+                        <span class="menu-label-v">BẠN BÈ</span>
                     </div>
                 </div>
             </div>
@@ -439,6 +479,20 @@
                                         <button class="tool-btn btn-purple" id="btn-admin-set-level">Gán</button>
                                     </div>
                                     <span style="font-size:10px; color:#aaa;" id="admin-level-hint"></span>
+
+                                    <!-- TRA CỨU NGƯỜI CHƠI — xem tài khoản trước khi cấp quyền -->
+                                    <div style="display:flex; gap:5px; margin-top: 8px; align-items:center;">
+                                        <input type="text" id="lookup-target-user" class="admin-input" placeholder="Tra cứu tài khoản..." style="flex:1;">
+                                        <button class="tool-btn" id="btn-lookup-user">🔍 Xem</button>
+                                    </div>
+                                    <div id="lookup-result" class="lookup-result"></div>
+
+                                    <!-- DANH SÁCH ĐÃ CẤP QUYỀN (level > 1) — bấm Thu Hồi để đưa về Cấp 1 -->
+                                    <div class="granted-list-header">
+                                        <span>Đã cấp quyền</span>
+                                        <button class="tool-btn" id="btn-refresh-granted" title="Làm mới danh sách">🔄</button>
+                                    </div>
+                                    <div id="granted-list"><div class="monitor-empty">Chưa có ai được cấp quyền.</div></div>
                                 </div>
                             </div>
                         </div>
@@ -468,6 +522,33 @@
 </div>
 
 </div><!-- /page-wrap -->
+
+<!-- MODAL: CÀI ĐẶT — chứa Hồ Sơ Của Tôi / Bảng Xếp Hạng / Lịch Sử Trận dạng danh sách con -->
+<div class="modal-overlay" id="modal-settings">
+    <div class="modal-box" style="max-width: 420px;">
+        <h3>⚙️ Cài Đặt</h3>
+        <div class="settings-menu">
+            <div class="settings-item" id="settings-profile">
+                <span class="settings-icon">🪪</span>
+                <span class="settings-label">Hồ Sơ Của Tôi</span>
+                <span class="settings-arrow">›</span>
+            </div>
+            <div class="settings-item" id="settings-leaderboard">
+                <span class="settings-icon">🏆</span>
+                <span class="settings-label">Bảng Xếp Hạng</span>
+                <span class="settings-arrow">›</span>
+            </div>
+            <div class="settings-item" id="settings-history">
+                <span class="settings-icon">📜</span>
+                <span class="settings-label">Lịch Sử Trận</span>
+                <span class="settings-arrow">›</span>
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 14px;">
+            <button class="btn-gray" id="settings-close">Đóng</button>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL: MỤC MENU CHƯA CÓ NỘI DUNG -->
 <div class="modal-overlay" id="modal-coming-soon">
@@ -544,6 +625,40 @@
         }
     }
     applyContainerMode();
+
+    // ========================================================================
+    // GHI NHỚ ĐĂNG NHẬP QUA sessionStorage — tránh phải đăng nhập lại mỗi khi tải lại trang (F5)
+    // hoặc vào lại tab. Chỉ tồn tại trong phiên trình duyệt hiện tại (đóng tab là mất, an toàn hơn
+    // localStorage cho tài khoản có mật khẩu). Lưu lại đủ để tự động gọi lại login().
+    // ========================================================================
+    const SESSION_KEY = 'game4nguoi_session';
+    function saveSessionToStorage(username, password, fullname, nickname) {
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({ username, password, fullname, nickname }));
+        } catch (e) { /* sessionStorage có thể bị chặn (chế độ ẩn danh khắt khe) — bỏ qua, không chặn app */ }
+    }
+    function clearSessionStorage() {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* bỏ qua */ }
+    }
+    function tryAutoLogin() {
+        let saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { /* bỏ qua */ }
+        if (!saved || !saved.username || !saved.password) return;
+        if (!window.FirebaseSync || !window.FirebaseSync.isReady()) {
+            setTimeout(tryAutoLogin, 300);
+            return;
+        }
+        window.FirebaseSync.login(saved.username, saved.password, saved.fullname, saved.nickname).then(function (result) {
+            if (result.status === 'ok' || result.status === 'new_account') {
+                finalizeLogin(saved.username, saved.fullname, saved.nickname, result.user);
+            } else {
+                clearSessionStorage();
+            }
+        }).catch(function () {
+            clearSessionStorage();
+        });
+    }
+    tryAutoLogin();
 
     // Ô tài khoản: hiện suffix @game4nguoi.com, tự động ghép vào username thật khi gửi lên Firebase.
     // Trả về username ĐẦY ĐỦ (có domain) để dùng làm khoá trong Firebase.
@@ -627,7 +742,7 @@
                 showModal('modal-session-conflict');
                 return;
             }
-            finalizeLogin(un, fn, nk, result.user);
+            finalizeLogin(un, fn, nk, result.user, pw);
         }).catch(function (err) {
             alert('❌ Lỗi kết nối Đám Mây: ' + err.message);
         });
@@ -664,7 +779,7 @@
                 return;
             }
             // 'ok' hoặc 'new_account'
-            finalizeLogin(user, fullname, nick, result.user);
+            finalizeLogin(user, fullname, nick, result.user, pass);
         }).catch(function (err) {
             console.error(err);
             alert("❌ Lỗi kết nối Đám Mây: " + err.message);
@@ -680,7 +795,7 @@
         window.FirebaseSync.forceClaim(username, fullname, nickname).then(function (result) {
             if (result.status === 'not_found') return alert("❌ Không tìm thấy tài khoản!");
             if (result.status === 'wrong_fullname') return alert("⚠️ Tên định danh không khớp, không thể giành phiên!");
-            finalizeLogin(username, fullname, nickname, result.user);
+            finalizeLogin(username, fullname, nickname, result.user, _pendingLogin.password);
         }).catch(function (err) {
             alert("❌ Lỗi: " + err.message);
         });
@@ -691,7 +806,7 @@
         _pendingLogin = null;
     });
 
-    function finalizeLogin(user, fullname, nick, userData) {
+    function finalizeLogin(user, fullname, nick, userData, password) {
         // Cấp bậc 1-5 (thang điểm thường) — KHÔNG liên quan đến Admin
         let level = (userData && typeof userData.level === 'number') ? userData.level : 1;
         // Admin (tài khoản gốc luuw): vai trò TÁCH BIỆT hoàn toàn khỏi thang 1-5, có quyền đặc biệt riêng
@@ -700,6 +815,10 @@
         userPermissions.level = level;
         userPermissions.isRootAdmin = isRootAdmin;
         currentUser = { username: user, fullname: fullname, nickname: nick };
+
+        // Lưu phiên vào sessionStorage để F5/tải lại trang không bị đăng xuất (chỉ lưu khi có password,
+        // tức là gọi từ luồng đăng nhập thật — auto-login lại từ storage sẽ không truyền password nên bỏ qua)
+        if (password) saveSessionToStorage(user, password, fullname, nick);
 
         document.getElementById('display-nickname').innerText = nick;
 
@@ -760,6 +879,7 @@
 
         // Lắng nghe nếu bị người khác giành mất tài khoản trong lúc đang chơi
         window.FirebaseSync.onForceKicked(function () {
+            clearSessionStorage(); // tránh F5 lại tự đăng nhập vào phiên đã bị giành mất
             showModal('modal-kicked');
         });
 
@@ -876,6 +996,7 @@
 
     // 3. THOÁT VÀ ĐĂNG XUẤT
     document.getElementById('btn-logout').addEventListener('click', function() {
+        clearSessionStorage();
         if (currentUser) {
             window.NetworkManager.disconnect(currentUser.nickname);
             window.FirebaseSync.logout(currentUser.username);
@@ -901,17 +1022,92 @@
 
     document.getElementById('btn-admin-set-level').addEventListener('click', function() {
         if (!userPermissions.isRootAdmin && (!userPermissions.level || userPermissions.level < 4)) return;
-        const targetUser = document.getElementById('admin-target-user').value.trim();
+        const rawTarget = document.getElementById('admin-target-user').value.trim();
         const targetLevel = parseInt(document.getElementById('admin-target-level').value, 10);
-        if (!targetUser) return alert("Nhập tên tài khoản cần gán cấp!");
+        if (!rawTarget) return alert("Nhập tên tài khoản cần gán cấp!");
+
+        // Phải ghép domain @game4nguoi.com giống lúc tạo tài khoản, nếu không sẽ tìm sai key trong Firebase
+        const targetUser = getFullUsername(rawTarget);
 
         window.FirebaseSync.setLevel(userPermissions, targetUser, targetLevel).then(function (result) {
             if (result.status === 'not_found') return alert("❌ Không tìm thấy tài khoản!");
             if (result.status === 'forbidden') return alert("⛔ Bạn không đủ quyền để gán cấp này!");
-            alert(`✅ Đã gán Cấp ${targetLevel} cho [${targetUser}]!`);
+            alert(`✅ Đã gán Cấp ${targetLevel} cho [${rawTarget}]!`);
             document.getElementById('admin-target-user').value = '';
+            refreshGrantedList();
         }).catch(function (err) { alert("❌ Lỗi: " + err.message); });
     });
+
+    // TRA CỨU NGƯỜI CHƠI — Admin/Cấp 4/5 xem thông tin 1 tài khoản trước khi cấp quyền
+    document.getElementById('btn-lookup-user').addEventListener('click', function() {
+        const rawTarget = document.getElementById('lookup-target-user').value.trim();
+        const resultBox = document.getElementById('lookup-result');
+        if (!rawTarget) { resultBox.innerHTML = ''; return; }
+
+        const targetUser = getFullUsername(rawTarget);
+        resultBox.innerHTML = '<div class="monitor-empty">Đang tra cứu...</div>';
+
+        window.FirebaseSync.lookupUser(targetUser).then(function (result) {
+            if (result.status === 'not_found') {
+                resultBox.innerHTML = '<div class="monitor-empty">Không tìm thấy tài khoản này.</div>';
+                return;
+            }
+            const d = result.data;
+            const roleText = d.isRootAdmin ? 'Admin' : `Cấp ${d.level}`;
+            const onlineText = d.online ? '<span class="lc-online">🟢 Đang online</span>' : '<span class="lc-offline">⚪ Ngoại tuyến</span>';
+            resultBox.innerHTML = `<div class="lookup-card">
+                <b>Xưng hô:</b> ${escapeHtml(d.nickname)}<br>
+                <b>Tên định danh:</b> ${escapeHtml(d.fullname)}<br>
+                <b>Tài khoản:</b> ${escapeHtml(rawTarget)}<br>
+                <b>Cấp bậc:</b> ${roleText}<br>
+                <b>Trạng thái:</b> ${onlineText}
+            </div>`;
+        }).catch(function (err) {
+            resultBox.innerHTML = '<div class="monitor-empty">Lỗi tra cứu: ' + escapeHtml(err.message) + '</div>';
+        });
+    });
+
+    // DANH SÁCH ĐÃ CẤP QUYỀN (level > 1) — Admin/Cấp 4/5 xem và thu hồi về Cấp 1
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.innerText = String(str == null ? '' : str);
+        return div.innerHTML;
+    }
+
+    function refreshGrantedList() {
+        const listBox = document.getElementById('granted-list');
+        if (!listBox) return;
+        listBox.innerHTML = '<div class="monitor-empty">Đang tải...</div>';
+
+        window.FirebaseSync.listGrantedUsers().then(function (users) {
+            if (!users || users.length === 0) {
+                listBox.innerHTML = '<div class="monitor-empty">Chưa có ai được cấp quyền.</div>';
+                return;
+            }
+            listBox.innerHTML = '';
+            users.forEach(function (u) {
+                const row = document.createElement('div');
+                row.className = 'granted-row';
+                row.innerHTML = `<span class="gr-info"><b>Cấp ${u.level}</b> — ${escapeHtml(u.nickname || u.username)}</span>
+                    <button class="btn-revoke" data-username="${escapeHtml(u.username)}">Thu hồi</button>`;
+                listBox.appendChild(row);
+            });
+            listBox.querySelectorAll('.btn-revoke').forEach(function (btn) {
+                btn.addEventListener('click', function() {
+                    const targetUsername = this.getAttribute('data-username');
+                    if (!confirm(`Thu hồi quyền của [${targetUsername}] về Cấp 1?`)) return;
+                    window.FirebaseSync.setLevel(userPermissions, targetUsername, 1).then(function (result) {
+                        if (result.status === 'not_found') return alert('❌ Không tìm thấy tài khoản!');
+                        if (result.status === 'forbidden') return alert('⛔ Bạn không đủ quyền thu hồi!');
+                        refreshGrantedList();
+                    }).catch(function (err) { alert('❌ Lỗi: ' + err.message); });
+                });
+            });
+        }).catch(function (err) {
+            listBox.innerHTML = '<div class="monitor-empty">Lỗi tải danh sách: ' + escapeHtml(err.message) + '</div>';
+        });
+    }
+    document.getElementById('btn-refresh-granted').addEventListener('click', refreshGrantedList);
 
     // 4b. THU GỌN / MỞ RỘNG KHUNG CHAT
     document.getElementById('btn-collapse-chat').addEventListener('click', function() {
@@ -924,7 +1120,14 @@
     // — bấm vào tiêu đề để trượt mở/đóng, tiết kiệm không gian.
     document.querySelectorAll('.util-box[data-accordion] .accordion-header').forEach(function(header) {
         header.addEventListener('click', function() {
-            header.closest('.util-box').classList.toggle('open');
+            const box = header.closest('.util-box');
+            const willOpen = !box.classList.contains('open');
+            box.classList.toggle('open');
+            // Mở "Quyền Hạn Của Bạn" mà đang có quyền cấp phát -> tự tải luôn danh sách đã cấp quyền
+            if (willOpen && box.id !== 'monitor-box' && box.querySelector('#admin-panel')
+                && (userPermissions.isRootAdmin || userPermissions.level >= 4)) {
+                refreshGrantedList();
+            }
         });
     });
 
@@ -936,13 +1139,24 @@
     document.getElementById('coming-soon-close').addEventListener('click', function() { hideModal('modal-coming-soon'); });
 
     document.getElementById('menu-choose-game').addEventListener('click', function() { openComingSoon('🎮 Chọn Game Chơi'); });
-    document.getElementById('menu-settings').addEventListener('click', function() { openComingSoon('⚙️ Cài Đặt'); });
-    document.getElementById('menu-leaderboard').addEventListener('click', function() { openComingSoon('🏆 Bảng Xếp Hạng'); });
     document.getElementById('menu-friends').addEventListener('click', function() { openComingSoon('👥 Bạn Bè'); });
-    document.getElementById('menu-history').addEventListener('click', function() { openComingSoon('📜 Lịch Sử Trận'); });
 
-    document.getElementById('menu-profile').addEventListener('click', function() {
+    // CÀI ĐẶT — mở modal chứa 3 mục con: Hồ Sơ Của Tôi / Bảng Xếp Hạng / Lịch Sử Trận
+    document.getElementById('menu-settings').addEventListener('click', function() { showModal('modal-settings'); });
+    document.getElementById('settings-close').addEventListener('click', function() { hideModal('modal-settings'); });
+
+    document.getElementById('settings-leaderboard').addEventListener('click', function() {
+        hideModal('modal-settings');
+        openComingSoon('🏆 Bảng Xếp Hạng');
+    });
+    document.getElementById('settings-history').addEventListener('click', function() {
+        hideModal('modal-settings');
+        openComingSoon('📜 Lịch Sử Trận');
+    });
+
+    document.getElementById('settings-profile').addEventListener('click', function() {
         if (!currentUser) return;
+        hideModal('modal-settings');
         const lv = userPermissions.level || 1;
         const rankText = userPermissions.isRootAdmin ? 'Admin (toàn quyền tối cao)' : `Cấp ${lv}${lv === 4 ? ' (Điều hành)' : (lv === 5 ? ' (Điều hành cấp cao)' : '')}`;
         alert(
@@ -1148,11 +1362,20 @@
             if (msg.isSystem) {
                 div.innerText = msg.text;
             } else {
-                let namePrefix = `<strong>${msg.sender}:</strong> `;
+                // Badge cấp bậc nhỏ cạnh tên người gửi (nếu tin nhắn có kèm senderRole)
+                let roleBadgeHtml = '';
+                if (msg.senderRole) {
+                    if (msg.senderRole.isRootAdmin) {
+                        roleBadgeHtml = ' <span class="chat-role-badge chat-role-admin">Admin</span>';
+                    } else if (msg.senderRole.level && msg.senderRole.level > 1) {
+                        roleBadgeHtml = ` <span class="chat-role-badge chat-role-lv${msg.senderRole.level}">Cấp ${msg.senderRole.level}</span>`;
+                    }
+                }
+                let namePrefix = `<strong>${escapeHtml(msg.sender)}</strong>${roleBadgeHtml}:`;
                 if (msg.type === 'image') {
                     div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
                 } else {
-                    div.innerHTML = `${namePrefix} ${msg.text}`;
+                    div.innerHTML = `${namePrefix} ${escapeHtml(msg.text)}`;
                 }
             }
             ui.chatBox.appendChild(div);
@@ -1166,10 +1389,15 @@
     function sendText() {
         let text = ui.chatInput.value.trim();
         if (text) {
-            window.NetworkManager.sendChat(currentTopic, currentUser.nickname, text, 'text');
+            window.NetworkManager.sendChat(currentTopic, currentUser.nickname, text, 'text', getMySenderRole());
             ui.chatInput.value = '';
             document.getElementById('emoji-picker').classList.remove('active');
         }
+    }
+
+    // Gói cấp bậc của mình để gửi kèm mỗi tin nhắn -> người nhận hiển thị badge cạnh tên
+    function getMySenderRole() {
+        return { level: userPermissions.level || 1, isRootAdmin: !!userPermissions.isRootAdmin };
     }
 
     // EMOJI VÀ UP ẢNH
@@ -1220,7 +1448,7 @@
                 ctx.drawImage(img, 0, 0, width, height);
                 
                 const base64Data = canvas.toDataURL('image/jpeg', 0.6); 
-                window.NetworkManager.sendChat(currentTopic, currentUser.nickname, base64Data, 'image');
+                window.NetworkManager.sendChat(currentTopic, currentUser.nickname, base64Data, 'image', getMySenderRole());
             }
             img.src = e.target.result;
         }
