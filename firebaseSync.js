@@ -131,6 +131,35 @@
     }
 
     // ========================================================================
+    // III-B. LẮNG NGHE THAY ĐỔI QUYỀN (REAL-TIME) — khi Admin/Cấp 4/5 cấp hoặc thu hồi quyền
+    // của một tài khoản đang online, tài khoản đó thấy hiệu lực NGAY LẬP TỨC, không cần tải lại trang.
+    // ========================================================================
+    let _permissionListenerRef = null;
+    let _onPermissionChangedCallback = null;
+
+    function _watchOwnPermissions(username) {
+        _stopWatchingPermissions();
+        _permissionListenerRef = REF_USER(username);
+        _permissionListenerRef.on('value', function (snapshot) {
+            if (!snapshot.exists()) return;
+            const val = snapshot.val();
+            if (typeof _onPermissionChangedCallback === 'function') {
+                _onPermissionChangedCallback({
+                    level: (typeof val.level === 'number') ? val.level : 1,
+                    isRootAdmin: !!val.isRootAdmin
+                });
+            }
+        });
+    }
+
+    function _stopWatchingPermissions() {
+        if (_permissionListenerRef) {
+            _permissionListenerRef.off();
+            _permissionListenerRef = null;
+        }
+    }
+
+    // ========================================================================
     // IV. API CHÍNH — XUẤT RA WINDOW.FIREBASESYNC
     // ========================================================================
 
@@ -149,6 +178,15 @@
          */
         onForceKicked: function (callback) {
             _onForceKickedCallback = callback;
+        },
+
+        /**
+         * Đăng ký lắng nghe khi CẤP BẬC/QUYỀN của TÀI KHOẢN ĐANG ĐĂNG NHẬP thay đổi (real-time) —
+         * ví dụ Admin vừa cấp hoặc thu hồi quyền. Callback nhận { level, isRootAdmin } mới nhất.
+         * Việc lắng nghe tự bắt đầu ngay khi đăng nhập thành công (trong _claimSession).
+         */
+        onPermissionChanged: function (callback) {
+            _onPermissionChangedCallback = callback;
         },
 
         /**
@@ -269,7 +307,7 @@
         },
 
         /**
-         * Nội bộ: ghi session mới của MÁY NÀY vào tài khoản + bắt đầu lắng nghe bị kick
+         * Nội bộ: ghi session mới của MÁY NÀY vào tài khoản + bắt đầu lắng nghe bị kick + lắng nghe quyền
          */
         _claimSession: function (username, userData) {
             _currentSessionId = generateSessionId();
@@ -282,6 +320,7 @@
             };
 
             _watchForKick(_currentSessionId);
+            _watchOwnPermissions(username);
 
             return REF_USER(username).child('activeSession').set(sessionInfo);
         },
@@ -320,6 +359,7 @@
          */
         logout: function (username) {
             _stopWatchingKick();
+            _stopWatchingPermissions();
             if (!db || !username) return Promise.resolve();
 
             return REF_USER(username).once('value').then(function (snapshot) {
@@ -431,6 +471,35 @@
                         online: !!(val.activeSession && val.activeSession.sessionId)
                     }
                 };
+            });
+        },
+
+        /**
+         * TRA CỨU NGƯỜI CHƠI THEO XƯNG HÔ (nickname) — có thể trùng tên giữa nhiều tài khoản khác nhau,
+         * nên trả về MẢNG tất cả tài khoản khớp (không phân biệt hoa/thường, so khớp chính xác toàn bộ chuỗi).
+         * Trả về mảng: [{ username, nickname, fullname, level, isRootAdmin, online }, ...]
+         */
+        lookupUsersByNickname: function (nickname) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            const target = String(nickname || '').trim().toLowerCase();
+            if (!target) return Promise.resolve([]);
+
+            return REF_USERS().once('value').then(function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val();
+                    if (val && String(val.nickname || '').trim().toLowerCase() === target) {
+                        result.push({
+                            username: decodeUserKey(child.key),
+                            nickname: val.nickname || '',
+                            fullname: val.fullname || '',
+                            level: (typeof val.level === 'number') ? val.level : 1,
+                            isRootAdmin: !!val.isRootAdmin,
+                            online: !!(val.activeSession && val.activeSession.sessionId)
+                        });
+                    }
+                });
+                return result;
             });
         },
 
