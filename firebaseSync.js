@@ -76,6 +76,11 @@
     const REF_USERS = () => db.ref('users');
     const REF_USER = (username) => db.ref('users/' + encodeUserKey(username));
     const REF_KICKS = (sessionId) => db.ref('kicks/' + sessionId);
+    // BẠN BÈ: friends/{userKey}/{friendKey} = true  |  friendRequests/{toUserKey}/{fromUserKey} = {fromNickname, fromFullname, at}
+    const REF_FRIENDS = (username) => db.ref('friends/' + encodeUserKey(username));
+    const REF_FRIEND_LINK = (username, friendUsername) => db.ref('friends/' + encodeUserKey(username) + '/' + encodeUserKey(friendUsername));
+    const REF_FRIEND_REQUESTS = (username) => db.ref('friendRequests/' + encodeUserKey(username));
+    const REF_FRIEND_REQUEST = (toUsername, fromUsername) => db.ref('friendRequests/' + encodeUserKey(toUsername) + '/' + encodeUserKey(fromUsername));
 
     // ========================================================================
     // II. TIỆN ÍCH NỘI BỘ
@@ -505,6 +510,152 @@
 
         getCurrentSessionId: function () {
             return _currentSessionId;
+        },
+
+        // ========================================================================
+        // V. HỆ THỐNG BẠN BÈ
+        // ========================================================================
+
+        /**
+         * GỬI LỜI MỜI KẾT BẠN — tìm người nhận theo Xưng hô (nickname) + Tên định danh (fullname),
+         * cả 2 phải khớp CHÍNH XÁC (không phân biệt hoa/thường với nickname) để tránh gửi nhầm người
+         * trùng tên. Trả về Promise resolve:
+         *   { status: 'ok' }
+         *   { status: 'not_found' }        -> không ai khớp cả xưng hô + tên định danh
+         *   { status: 'self' }             -> gửi cho chính mình
+         *   { status: 'already_friends' }  -> đã là bạn bè rồi
+         *   { status: 'already_sent' }     -> đã gửi lời mời trước đó, đang chờ
+         */
+        sendFriendRequest: function (fromUsername, fromNickname, targetNickname, targetFullname) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            const wantNick = String(targetNickname || '').trim().toLowerCase();
+            const wantFull = String(targetFullname || '').trim();
+            if (!wantNick || !wantFull) return Promise.resolve({ status: 'not_found' });
+
+            return REF_USERS().once('value').then(function (snapshot) {
+                let targetUsername = null;
+                snapshot.forEach(function (child) {
+                    const val = child.val();
+                    if (val && String(val.nickname || '').trim().toLowerCase() === wantNick
+                        && String(val.fullname || '').trim() === wantFull) {
+                        targetUsername = decodeUserKey(child.key);
+                    }
+                });
+                if (!targetUsername) return { status: 'not_found' };
+                if (targetUsername === fromUsername) return { status: 'self' };
+
+                return REF_FRIEND_LINK(fromUsername, targetUsername).once('value').then(function (linkSnap) {
+                    if (linkSnap.exists()) return { status: 'already_friends' };
+                    return REF_FRIEND_REQUEST(targetUsername, fromUsername).once('value').then(function (reqSnap) {
+                        if (reqSnap.exists()) return { status: 'already_sent' };
+                        return REF_FRIEND_REQUEST(targetUsername, fromUsername).set({
+                            fromNickname: fromNickname,
+                            at: firebase.database.ServerValue.TIMESTAMP
+                        }).then(function () { return { status: 'ok' }; });
+                    });
+                });
+            });
+        },
+
+        /**
+         * LẮNG NGHE LỜI MỜI KẾT BẠN ĐẾN (real-time) — callback nhận mảng
+         * [{ fromUsername, fromNickname, at }, ...] mỗi khi danh sách thay đổi. Dùng để hiện số
+         * thông báo cạnh mục Bạn Bè.
+         */
+        onFriendRequestsChanged: function (username, callback) {
+            _stopWatchingFriendRequests();
+            _friendRequestsListenerRef = REF_FRIEND_REQUESTS(username);
+            _friendRequestsListenerRef.on('value', function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val() || {};
+                    result.push({
+                        fromUsername: decodeUserKey(child.key),
+                        fromNickname: val.fromNickname || '',
+                        at: val.at || 0
+                    });
+                });
+                if (typeof callback === 'function') callback(result);
+            });
+        },
+
+        /**
+         * CHẤP NHẬN lời mời kết bạn — tạo liên kết 2 chiều trong friends/ rồi xoá lời mời.
+         */
+        acceptFriendRequest: function (myUsername, fromUsername) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            const updates = {};
+            updates['friends/' + encodeUserKey(myUsername) + '/' + encodeUserKey(fromUsername)] = true;
+            updates['friends/' + encodeUserKey(fromUsername) + '/' + encodeUserKey(myUsername)] = true;
+            updates['friendRequests/' + encodeUserKey(myUsername) + '/' + encodeUserKey(fromUsername)] = null;
+            return db.ref().update(updates).then(function () { return { status: 'ok' }; });
+        },
+
+        /**
+         * TỪ CHỐI lời mời kết bạn — chỉ xoá lời mời, không tạo liên kết.
+         */
+        declineFriendRequest: function (myUsername, fromUsername) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_FRIEND_REQUEST(myUsername, fromUsername).remove().then(function () { return { status: 'ok' }; });
+        },
+
+        /**
+         * LẤY DANH SÁCH BẠN BÈ hiện tại — trả về mảng đầy đủ thông tin (nickname, fullname, online)
+         * để hiển thị trong mục Bạn Bè.
+         */
+        listFriends: function (username) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_FRIENDS(username).once('value').then(function (snapshot) {
+                const friendUsernames = [];
+                snapshot.forEach(function (child) {
+                    if (child.val() === true) friendUsernames.push(decodeUserKey(child.key));
+                });
+                if (friendUsernames.length === 0) return [];
+                return Promise.all(friendUsernames.map(function (fu) {
+                    return REF_USER(fu).once('value').then(function (uSnap) {
+                        const val = uSnap.val() || {};
+                        return {
+                            username: fu,
+                            nickname: val.nickname || fu,
+                            fullname: val.fullname || '',
+                            online: !!(val.activeSession && val.activeSession.sessionId)
+                        };
+                    });
+                }));
+            });
+        },
+
+        /**
+         * LẤY DANH SÁCH TẤT CẢ NGƯỜI ĐANG ONLINE (dùng cho tab "Đang online" trong mục Bạn Bè).
+         * Trả về mảng: [{ username, nickname, fullname }]
+         */
+        listAllOnlineUsers: function () {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USERS().once('value').then(function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val();
+                    if (val && val.activeSession && val.activeSession.sessionId) {
+                        result.push({
+                            username: decodeUserKey(child.key),
+                            nickname: val.nickname || '',
+                            fullname: val.fullname || ''
+                        });
+                    }
+                });
+                return result;
+            });
+        },
+
+        /**
+         * XOÁ BẠN — gỡ liên kết 2 chiều.
+         */
+        removeFriend: function (myUsername, friendUsername) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            const updates = {};
+            updates['friends/' + encodeUserKey(myUsername) + '/' + encodeUserKey(friendUsername)] = null;
+            updates['friends/' + encodeUserKey(friendUsername) + '/' + encodeUserKey(myUsername)] = null;
+            return db.ref().update(updates).then(function () { return { status: 'ok' }; });
         }
     };
 
