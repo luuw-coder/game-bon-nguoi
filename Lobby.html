@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sảnh Chờ - GAME 4 NGUOI</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1b2a; }
+
+    #world-viewport { position: fixed; inset: 0; overflow: hidden; cursor: default; }
+    #world {
+        position: absolute; top: 0; left: 0;
+        width: 3200px; height: 1400px;
+        background: linear-gradient(180deg, #1b2a4a 0%, #16213a 45%, #10182c 100%);
+        transform-origin: 0 0;
+    }
+
+    /* Trang trí bầu trời */
+    .cloud { position: absolute; background: rgba(255,255,255,0.06); border-radius: 50px; }
+
+    /* Nền tảng parkour */
+    .platform {
+        position: absolute; background: linear-gradient(180deg, #3a5a40 0%, #2d4531 100%);
+        border-top: 3px solid #588157; border-radius: 4px; box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    }
+    .platform.stone { background: linear-gradient(180deg, #5c6370 0%, #454b57 100%); border-top-color: #7d8492; }
+    .platform.wood { background: linear-gradient(180deg, #8d6e4a 0%, #6b5236 100%); border-top-color: #b08d5e; }
+
+    /* Nhân vật (pixel-art vẽ bằng CSS box-shadow, không dùng ảnh ngoài) */
+    .player {
+        position: absolute; width: 28px; height: 40px; z-index: 10;
+        transition: filter 0.15s ease;
+    }
+    .player-body {
+        position: absolute; bottom: 0; left: 4px; width: 20px; height: 26px;
+        border-radius: 6px 6px 3px 3px;
+    }
+    .player-head {
+        position: absolute; bottom: 24px; left: 6px; width: 16px; height: 16px;
+        border-radius: 50%; background: #ffd8a8; box-shadow: inset -3px -3px 0 rgba(0,0,0,0.12);
+    }
+    .player-leg { position: absolute; bottom: -6px; width: 7px; height: 10px; border-radius: 2px; background: #333; }
+    .player-leg.l { left: 5px; } .player-leg.r { left: 15px; }
+    .player.walking .player-leg.l { animation: legSwing 0.35s infinite alternate; }
+    .player.walking .player-leg.r { animation: legSwing 0.35s infinite alternate-reverse; }
+    @keyframes legSwing { from { transform: translateY(0) rotate(-12deg); } to { transform: translateY(-2px) rotate(12deg); } }
+    .player.knocked { filter: brightness(1.6) saturate(1.5); }
+
+    .player-name {
+        position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
+        font-size: 11px; font-weight: bold; color: #fff; white-space: nowrap;
+        background: rgba(0,0,0,0.45); padding: 2px 7px; border-radius: 10px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none;
+    }
+    .player.me .player-name { color: #ffd54f; }
+
+    #welcome-banner {
+        position: fixed; top: 26px; left: 50%; transform: translateX(-50%);
+        background: rgba(20,20,30,0.6); backdrop-filter: blur(6px);
+        padding: 10px 26px; border-radius: 30px; font-size: 15px; font-weight: bold;
+        color: #ffd54f; letter-spacing: 1px; z-index: 200; opacity: 0;
+        transition: opacity 0.6s ease, transform 0.6s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+    #welcome-banner.show { opacity: 1; }
+
+    #hud {
+        position: fixed; top: 16px; left: 16px; z-index: 200;
+        display: flex; gap: 10px; align-items: center;
+    }
+    .hud-btn {
+        background: rgba(24,24,24,0.55); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.15);
+        padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
+        transition: 0.2s;
+    }
+    .hud-btn:hover { background: rgba(255,152,0,0.75); border-color: #ff9800; }
+
+    #hint {
+        position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,0.4); color: #ccc; font-size: 12px; padding: 8px 16px; border-radius: 20px;
+        z-index: 200; text-align: center;
+    }
+
+    #player-count {
+        position: fixed; top: 16px; right: 16px; z-index: 200;
+        background: rgba(24,24,24,0.55); backdrop-filter: blur(4px); color: #4caf50; font-weight: bold;
+        font-size: 13px; padding: 9px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+    }
+</style>
+</head>
+<body>
+
+<div id="welcome-banner">Chào mừng, <span id="welcome-name">---</span>! 👋</div>
+<div id="hud">
+    <button class="hud-btn" id="btn-back-hub">⬅ Về Sảnh Chính</button>
+    <button class="hud-btn" id="btn-respawn">🔄 Về Spawn</button>
+</div>
+<div id="player-count">🟢 1 người đang ở đây</div>
+<div id="hint">Di chuyển: WASD hoặc phím mũi tên · Space để nhảy · Click vào người chơi khác để đẩy họ bay ra</div>
+
+<div id="world-viewport">
+    <div id="world"></div>
+</div>
+
+<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+<script>
+    // ============================================================================
+    // SẢNH CHỜ PARKOUR MULTIPLAYER — file độc lập, không phụ thuộc index.html.
+    // Nhận nickname/username qua query string khi được mở từ hub (index.html -> launchGame()).
+    // Đồng bộ vị trí người chơi khác qua MQTT (kênh nhẹ, không lưu lịch sử), giống hệ thống chat.
+    // ============================================================================
+    const params = new URLSearchParams(location.search);
+    const myNickname = params.get('nickname') || ('Khách_' + Math.floor(Math.random() * 9999));
+    const myUsername = params.get('username') || ('guest_' + Date.now());
+
+    const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+    const LOBBY_TOPIC = 'game4nguoi_2026/lobby_positions';
+    const WORLD_W = 3200, WORLD_H = 1400;
+    const SPAWN = { x: 120, y: 1160 };
+    const GRAVITY = 0.65, JUMP_FORCE = -14.5, MOVE_SPEED = 4.4, FRICTION = 0.82;
+
+    // ---- Định nghĩa map nhiều tầng (parkour rộng) ----
+    const PLATFORMS = [
+        // Mặt đất chính
+        { x: 0, y: 1220, w: 900, h: 180, type: '' },
+        { x: 1050, y: 1220, w: 700, h: 180, type: '' },
+        { x: 1950, y: 1220, w: 1250, h: 180, type: '' },
+        // Tầng 1 — bệ gỗ so le
+        { x: 250, y: 1080, w: 140, h: 26, type: 'wood' },
+        { x: 470, y: 1010, w: 140, h: 26, type: 'wood' },
+        { x: 700, y: 940, w: 140, h: 26, type: 'wood' },
+        { x: 950, y: 1000, w: 160, h: 26, type: 'wood' },
+        // Tầng 2 — bệ đá cao hơn
+        { x: 1180, y: 860, w: 160, h: 24, type: 'stone' },
+        { x: 1420, y: 780, w: 160, h: 24, type: 'stone' },
+        { x: 1680, y: 860, w: 160, h: 24, type: 'stone' },
+        { x: 1920, y: 780, w: 160, h: 24, type: 'stone' },
+        // Đảo nổi cao nhất
+        { x: 2200, y: 650, w: 220, h: 26, type: 'wood' },
+        { x: 2500, y: 560, w: 220, h: 26, type: 'wood' },
+        { x: 2820, y: 470, w: 260, h: 26, type: 'wood' },
+        // Khu vực phụ bên phải thấp hơn
+        { x: 2350, y: 1080, w: 180, h: 24, type: 'stone' },
+        { x: 2650, y: 980, w: 180, h: 24, type: 'stone' },
+        { x: 2950, y: 1080, w: 200, h: 24, type: 'stone' }
+    ];
+
+    const worldEl = document.getElementById('world');
+    const viewportEl = document.getElementById('world-viewport');
+    worldEl.style.width = WORLD_W + 'px';
+    worldEl.style.height = WORLD_H + 'px';
+
+    // Vẽ nền tảng
+    PLATFORMS.forEach(function (p) {
+        const div = document.createElement('div');
+        div.className = 'platform' + (p.type ? ' ' + p.type : '');
+        div.style.left = p.x + 'px'; div.style.top = p.y + 'px';
+        div.style.width = p.w + 'px'; div.style.height = p.h + 'px';
+        worldEl.appendChild(div);
+    });
+    // Vài đám mây trang trí
+    for (let i = 0; i < 14; i++) {
+        const c = document.createElement('div');
+        c.className = 'cloud';
+        const w = 80 + Math.random() * 140;
+        c.style.width = w + 'px'; c.style.height = (w * 0.4) + 'px';
+        c.style.left = (Math.random() * WORLD_W) + 'px';
+        c.style.top = (60 + Math.random() * 400) + 'px';
+        worldEl.appendChild(c);
+    }
+
+    // ---- Tạo phần tử DOM cho 1 nhân vật ----
+    const PLAYER_COLORS = ['#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#a663cc', '#06d6a0', '#ef476f'];
+    function colorFor(name) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+        return PLAYER_COLORS[hash % PLAYER_COLORS.length];
+    }
+
+    function createPlayerEl(nickname, isMe) {
+        const el = document.createElement('div');
+        el.className = 'player' + (isMe ? ' me' : '');
+        el.innerHTML = `
+            <div class="player-name">${escapeHtml(nickname)}</div>
+            <div class="player-body" style="background:${colorFor(nickname)};"></div>
+            <div class="player-head"></div>
+            <div class="player-leg l"></div>
+            <div class="player-leg r"></div>`;
+        worldEl.appendChild(el);
+        return el;
+    }
+    function escapeHtml(str) {
+        const d = document.createElement('div'); d.innerText = str; return d.innerHTML;
+    }
+
+    // ---- Nhân vật của chính mình ----
+    const me = {
+        x: SPAWN.x, y: SPAWN.y, vx: 0, vy: 0, onGround: false, facing: 1,
+        knockTimer: 0, el: createPlayerEl(myNickname, true)
+    };
+
+    function resetToSpawn() {
+        me.x = SPAWN.x; me.y = SPAWN.y; me.vx = 0; me.vy = 0;
+    }
+    document.getElementById('btn-respawn').addEventListener('click', resetToSpawn);
+    // Cho phép index.html (nếu nhúng iframe trong tương lai) gửi lệnh respawn qua phím tắt
+    window.addEventListener('game4nguoi:respawn', resetToSpawn);
+
+    document.getElementById('btn-back-hub').addEventListener('click', function () {
+        window.close();
+        // Một số trình duyệt chặn window.close() nếu tab không phải do script mở -> fallback
+        setTimeout(function () { location.href = '../index.html'; }, 150);
+    });
+
+    // ---- Bàn phím ----
+    const keys = {};
+    window.addEventListener('keydown', function (e) {
+        keys[e.code] = true;
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+    });
+    window.addEventListener('keyup', function (e) { keys[e.code] = false; });
+
+    function isDown(codes) { return codes.some(c => keys[c]); }
+
+    // ---- Vòng lặp vật lý ----
+    function physicsStep() {
+        if (me.knockTimer > 0) {
+            me.knockTimer -= 16;
+        } else {
+            let moving = false;
+            if (isDown(['KeyA', 'ArrowLeft'])) { me.vx -= 0.9; me.facing = -1; moving = true; }
+            if (isDown(['KeyD', 'ArrowRight'])) { me.vx += 0.9; me.facing = 1; moving = true; }
+            if ((isDown(['KeyW', 'ArrowUp', 'Space'])) && me.onGround) { me.vy = JUMP_FORCE; me.onGround = false; }
+            me.el.classList.toggle('walking', moving && me.onGround);
+        }
+
+        me.vx = Math.max(-MOVE_SPEED, Math.min(MOVE_SPEED, me.vx));
+        me.vx *= FRICTION;
+        me.vy += GRAVITY;
+        if (me.vy > 22) me.vy = 22;
+
+        let nextX = me.x + me.vx;
+        let nextY = me.y + me.vy;
+
+        // Va chạm nền tảng (AABB đơn giản, chỉ chặn từ trên xuống — kiểu platformer)
+        me.onGround = false;
+        const pw = 28, ph = 40;
+        PLATFORMS.forEach(function (p) {
+            const withinX = nextX + pw > p.x && nextX < p.x + p.w;
+            const fallingOnto = (me.y + ph <= p.y + 2) && (nextY + ph >= p.y) && me.vy >= 0;
+            if (withinX && fallingOnto) {
+                nextY = p.y - ph;
+                me.vy = 0;
+                me.onGround = true;
+            }
+        });
+
+        // Giới hạn biên thế giới (không giới hạn "cứng" kiểu tường, chỉ chặn rơi ra ngoài map)
+        nextX = Math.max(0, Math.min(WORLD_W - pw, nextX));
+        if (nextY > WORLD_H) { nextX = SPAWN.x; nextY = SPAWN.y; me.vy = 0; } // rơi khỏi map -> về spawn
+
+        me.x = nextX; me.y = nextY;
+
+        renderPlayer(me);
+        updateCamera();
+        broadcastPosition();
+        requestAnimationFrame(physicsStep);
+    }
+
+    function renderPlayer(p) {
+        p.el.style.left = p.x + 'px';
+        p.el.style.top = p.y + 'px';
+        p.el.style.transform = 'scaleX(' + (p.facing >= 0 ? 1 : -1) + ')';
+    }
+
+    // ---- Camera cuộn theo nhân vật, không giới hạn khu vực di chuyển của người chơi ----
+    function updateCamera() {
+        const vw = viewportEl.clientWidth, vh = viewportEl.clientHeight;
+        let camX = me.x - vw / 2;
+        let camY = me.y - vh / 2;
+        camX = Math.max(0, Math.min(WORLD_W - vw, camX));
+        camY = Math.max(0, Math.min(WORLD_H - vh, camY));
+        worldEl.style.transform = `translate(${-camX}px, ${-camY}px)`;
+    }
+    window.addEventListener('resize', updateCamera);
+
+    // ============================================================================
+    // MULTIPLAYER — MQTT: mỗi client tự phát vị trí của mình lên LOBBY_TOPIC định kỳ,
+    // người khác nhận và vẽ lại nhân vật tương ứng (giống hệ thống chat có sẵn).
+    // ============================================================================
+    const otherPlayers = {}; // { username: { el, x, y, facing, lastSeen } }
+    let mqttClient = null;
+
+    function connectMqtt() {
+        const clientId = 'lobby_' + Math.random().toString(16).substring(2, 10);
+        mqttClient = mqtt.connect(MQTT_BROKER, { clientId: clientId, keepalive: 30 });
+
+        mqttClient.on('connect', function () {
+            mqttClient.subscribe(LOBBY_TOPIC);
+        });
+
+        mqttClient.on('message', function (topic, message) {
+            try {
+                const data = JSON.parse(message.toString());
+                if (data.username === myUsername) return; // bỏ qua tin của chính mình
+                handleRemoteUpdate(data);
+            } catch (e) { /* bỏ qua gói lỗi định dạng */ }
+        });
+    }
+    connectMqtt();
+
+    function handleRemoteUpdate(data) {
+        if (data.type === 'leave') {
+            if (otherPlayers[data.username]) {
+                otherPlayers[data.username].el.remove();
+                delete otherPlayers[data.username];
+                updatePlayerCount();
+            }
+            return;
+        }
+        if (data.type === 'push') {
+            // Bị người khác (data.targetUsername === mình) click đẩy bay ra
+            if (data.targetUsername === myUsername) {
+                applyKnockback(data.fromX, data.fromY);
+            }
+            return;
+        }
+
+        let entry = otherPlayers[data.username];
+        if (!entry) {
+            entry = { el: createPlayerEl(data.nickname, false), x: data.x, y: data.y, facing: 1 };
+            otherPlayers[data.username] = entry;
+            updatePlayerCount();
+        }
+        entry.x = data.x; entry.y = data.y; entry.facing = data.facing;
+        entry.lastSeen = Date.now();
+        entry.el.classList.toggle('walking', !!data.moving);
+        renderPlayer(entry);
+
+        // Click vào nhân vật người khác để đẩy họ bay ra (chỉ khi đứng đủ gần)
+        if (!entry.el._clickBound) {
+            entry.el._clickBound = true;
+            entry.el.style.pointerEvents = 'auto';
+            entry.el.style.cursor = 'pointer';
+            entry.el.addEventListener('click', function () {
+                const dist = Math.hypot(entry.x - me.x, entry.y - me.y);
+                if (dist < 90) {
+                    mqttClient.publish(LOBBY_TOPIC, JSON.stringify({
+                        type: 'push', targetUsername: data.username, fromX: me.x, fromY: me.y
+                    }));
+                }
+            });
+        }
+    }
+
+    function applyKnockback(fromX, fromY) {
+        const dx = me.x - fromX, dy = me.y - fromY;
+        const dist = Math.hypot(dx, dy) || 1;
+        const power = 16;
+        me.vx = (dx / dist) * power;
+        me.vy = -9;
+        me.knockTimer = 350;
+        me.el.classList.add('knocked');
+        setTimeout(function () { me.el.classList.remove('knocked'); }, 350);
+    }
+
+    let lastBroadcast = 0;
+    function broadcastPosition() {
+        const now = Date.now();
+        if (now - lastBroadcast < 60 || !mqttClient || !mqttClient.connected) return; // ~16 lần/giây
+        lastBroadcast = now;
+        mqttClient.publish(LOBBY_TOPIC, JSON.stringify({
+            type: 'pos', username: myUsername, nickname: myNickname,
+            x: Math.round(me.x), y: Math.round(me.y), facing: me.facing,
+            moving: Math.abs(me.vx) > 0.3 && me.onGround
+        }));
+    }
+
+    // Dọn người chơi không còn hoạt động (không nhận được update > 8s -> coi như đã rời)
+    setInterval(function () {
+        const now = Date.now();
+        Object.keys(otherPlayers).forEach(function (u) {
+            if (now - (otherPlayers[u].lastSeen || 0) > 8000) {
+                otherPlayers[u].el.remove();
+                delete otherPlayers[u];
+                updatePlayerCount();
+            }
+        });
+    }, 4000);
+
+    function updatePlayerCount() {
+        const count = Object.keys(otherPlayers).length + 1;
+        document.getElementById('player-count').innerText = `🟢 ${count} người đang ở đây`;
+    }
+
+    window.addEventListener('beforeunload', function () {
+        if (mqttClient && mqttClient.connected) {
+            mqttClient.publish(LOBBY_TOPIC, JSON.stringify({ type: 'leave', username: myUsername }));
+        }
+    });
+
+    // ---- Khởi động ----
+    document.getElementById('welcome-name').innerText = myNickname;
+    resetToSpawn();
+    renderPlayer(me);
+    updateCamera();
+    requestAnimationFrame(physicsStep);
+    setTimeout(function () {
+        document.getElementById('welcome-banner').classList.add('show');
+        setTimeout(function () { document.getElementById('welcome-banner').classList.remove('show'); }, 3200);
+    }, 200);
+</script>
+
+</body>
+</html>
