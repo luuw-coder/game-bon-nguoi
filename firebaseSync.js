@@ -387,6 +387,53 @@
             });
         },
 
+        /**
+         * LẤY DANH SÁCH TÀI KHOẢN ĐÃ ĐƯỢC CẤP QUYỀN (level > 1) — dùng cho Admin/Cấp 4/5 xem và thu hồi.
+         * Trả về mảng: [{ username, nickname, fullname, level }]  (username đã decode, không còn __DOT__...)
+         */
+        listGrantedUsers: function () {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USERS().once('value').then(function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val();
+                    const lvl = (val && typeof val.level === 'number') ? val.level : 1;
+                    if (lvl > 1) {
+                        result.push({
+                            username: decodeUserKey(child.key),
+                            nickname: val.nickname || '',
+                            fullname: val.fullname || '',
+                            level: lvl
+                        });
+                    }
+                });
+                return result;
+            });
+        },
+
+        /**
+         * XEM THÔNG TIN NGƯỜI CHƠI theo tài khoản (Admin/Cấp 4/5 dùng để tra cứu trước khi cấp quyền).
+         * Trả về { status: 'ok', data: {...} } hoặc { status: 'not_found' }
+         */
+        lookupUser: function (username) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USER(username).once('value').then(function (snapshot) {
+                if (!snapshot.exists()) return { status: 'not_found' };
+                const val = snapshot.val();
+                return {
+                    status: 'ok',
+                    data: {
+                        username: username,
+                        nickname: val.nickname || '',
+                        fullname: val.fullname || '',
+                        level: (typeof val.level === 'number') ? val.level : 1,
+                        isRootAdmin: !!val.isRootAdmin,
+                        online: !!(val.activeSession && val.activeSession.sessionId)
+                    }
+                };
+            });
+        },
+
         getCurrentSessionId: function () {
             return _currentSessionId;
         }
