@@ -93,6 +93,23 @@
         .menu-icon-v { font-size: 24px; }
         .menu-label-v { font-size: 16px; color: #eee; font-weight: bold; letter-spacing: 1px; }
 
+        /* KHUNG GAME NHÚNG — hiện thay cho menu-vertical khi đã chọn 1 game, chiếm toàn bộ .menu-center,
+           chat trái + orb phải + bạn bè vẫn giữ nguyên hiển thị đè lên trên (z-index cao hơn iframe). */
+        .game-frame-wrap { display: none; width: 100%; height: 100vh; position: relative; animation: fadeIn 0.35s ease; }
+        .game-frame-wrap.active { display: block; }
+        #game-iframe { width: 100%; height: 100%; border: none; background: #0d1b2a; }
+        .game-topbar {
+            position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 495;
+            display: flex; gap: 10px; align-items: center;
+        }
+        .game-topbar button {
+            background: rgba(24,24,24,0.6); backdrop-filter: blur(6px); color: #fff; border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .game-topbar button:hover { background: rgba(255,152,0,0.7); border-color: #ff9800; }
+        .game-topbar .gear-btn { font-size: 16px; padding: 8px 12px; }
+
         /* MODAL CÀI ĐẶT — kiểu sidebar trái + nội dung phải (giống Bloxd.io) */
         .settings-modal-box {
             max-width: 640px; width: 92%; padding: 0; overflow: hidden; position: relative;
@@ -183,6 +200,18 @@
 
         .announcement-box {}
         .announcement-content { font-size: 11px; color: #ccc; line-height: 1.4; background: #111; padding: 6px; border-radius: 4px; border-left: 3px solid #ff9800; min-height: 32px; }
+
+        /* BẢNG THÔNG BÁO CỐ ĐỊNH — góc trên-phải, luôn hiện thị, không cần hover */
+        .announce-fixed {
+            position: fixed; top: 14px; right: 14px; z-index: 490; width: 240px;
+            background: rgba(24,24,24,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,152,0,0.35); border-radius: 10px; padding: 10px 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            animation: fadeInDown 0.4s ease;
+        }
+        .announce-fixed h5 { font-size: 11px; color: #ff9800; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .announce-fixed .announce-text { font-size: 11px; color: #ddd; line-height: 1.4; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         .util-box {}
         .util-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
@@ -302,13 +331,12 @@
         .keybind-key.listening { background: #ff9800; color: #000; animation: pulseKey 0.9s infinite; }
         @keyframes pulseKey { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 
-        /* Mục Bạn Bè — cột trái, dưới khung chat */
+        /* Mục Bạn Bè — CỘT PHẢI, phía dưới thanh orb, sát mép phải */
         .friends-sidebar {
-            position: fixed; top: 310px; left: 0; z-index: 480; width: 300px; max-width: 300px;
-            background: rgba(24, 24, 24, 0.50); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.08); border-left: none; border-top: none;
-            border-radius: 0 0 10px 0; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-            padding: 10px; max-height: calc(100vh - 320px); overflow: hidden; display: flex; flex-direction: column;
+            position: fixed; bottom: 14px; right: 14px; z-index: 480; width: 280px; max-width: 280px;
+            background: rgba(24, 24, 24, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            padding: 10px; max-height: 60vh; overflow: hidden; display: flex; flex-direction: column;
         }
         .friends-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; cursor: pointer; user-select: none; }
         .friends-header span.ttl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -325,6 +353,17 @@
         .friend-row .fr-dot.on { background: #4caf50; box-shadow: 0 0 5px #4caf50; }
         .friend-req-actions { display: flex; gap: 4px; }
         .friend-req-actions button { padding: 3px 7px; font-size: 10px; }
+
+        .playerlist-tabs { display: flex; gap: 5px; margin-bottom: 8px; }
+        .playerlist-tab { flex: 1; text-align: center; background: #222; padding: 5px; border-radius: 5px; font-size: 10px; cursor: pointer; color: #ccc; }
+        .playerlist-tab.active { background: #ff9800; color: #000; font-weight: bold; }
+        .player-row { display: flex; align-items: center; justify-content: space-between; background: rgba(34,34,34,0.7); border-radius: 6px; padding: 6px 8px; font-size: 11px; margin-bottom: 5px; }
+        .player-row .pr-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; margin-right: 6px; flex-shrink: 0; display: inline-block; }
+        .player-row .pr-dot.on { background: #4caf50; box-shadow: 0 0 5px #4caf50; }
+        .player-row .pr-actions { display: flex; gap: 4px; }
+        .player-row .pr-actions button { padding: 3px 7px; font-size: 9px; }
+        .btn-danger { background: #c0392b; color: #fff; } .btn-danger:hover { background: #e74c3c; }
+        .btn-restore { background: #2e7d32; color: #fff; } .btn-restore:hover { background: #388e3c; }
         .friend-chat-popup {
             position: fixed; bottom: 10px; width: 260px; height: 320px; background: #181818;
             border: 1px solid #333; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.55);
@@ -523,9 +562,9 @@
                 </div>
             </div>
 
-            <!-- CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC KIỂU MINECRAFT (Chọn Game / Cài Đặt / Bạn Bè) -->
+            <!-- CỘT GIỮA — MENU CHÍNH (Chọn Game / Cài Đặt) HOẶC KHUNG GAME ĐANG CHƠI -->
             <div class="menu-center">
-                <div class="menu-vertical">
+                <div class="menu-vertical" id="menu-vertical">
                     <div class="menu-item-v" id="menu-choose-game">
                         <span class="menu-icon-v">🎮</span>
                         <span class="menu-label-v">CHỌN GAME CHƠI</span>
@@ -535,42 +574,25 @@
                         <span class="menu-label-v">CÀI ĐẶT</span>
                     </div>
                 </div>
+
+                <!-- Khung game nhúng (iframe) — hiện thay menu-vertical khi đã chọn 1 game -->
+                <div class="game-frame-wrap" id="game-frame-wrap">
+                    <div class="game-topbar">
+                        <button id="btn-exit-game">⬅ Về Sảnh Chính</button>
+                        <button class="gear-btn" id="btn-ingame-settings" title="Cài Đặt">⚙️</button>
+                    </div>
+                    <iframe id="game-iframe" src="" title="Game"></iframe>
+                </div>
+            </div>
+
+            <!-- BẢNG THÔNG BÁO MÁY CHỦ — cố định góc trên-phải, luôn hiện, không cần hover -->
+            <div class="announce-fixed" id="announce-fixed">
+                <h5>📢 Thông Báo Máy Chủ</h5>
+                <div class="announce-text" id="announcement-text">Chào mừng bạn! Vui lòng giữ văn hóa khi trò chuyện.</div>
             </div>
 
             <!-- CỘT PHẢI — MỖI MỤC LÀ 1 HÌNH TRÒN (orb), HOVER ĐỂ TRƯỢT BẢNG RA -->
             <div class="side-utils">
-
-                <!-- ORB: User rút gọn -->
-                <div class="orb-wrap" data-orb>
-                    <div class="orb" id="orb-user" title="Tài khoản">🧑</div>
-                    <div class="orb-panel">
-                        <h4>🧑 Tài Khoản</h4>
-                        <div class="user-card">
-                            <p>Xưng hô: <span id="display-nickname" class="nickname-editable" title="Bấm để đổi tên hiển thị">---</span> <span id="display-role-badge" class="badge-lv1">Cấp 1</span></p>
-                            <p>Kết nối: <span id="display-status-text" style="color:#ffb74d;">Đang kết nối...</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ORB: Thông báo máy chủ -->
-                <div class="orb-wrap" data-orb>
-                    <div class="orb" id="orb-announce" title="Thông báo máy chủ">📢</div>
-                    <div class="orb-panel">
-                        <h4>📢 Thông Báo Máy Chủ</h4>
-                        <div class="announcement-content" id="announcement-text">
-                            Chào mừng bạn! Vui lòng giữ văn hóa khi trò chuyện.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ORB: Trạng Thái Server -->
-                <div class="orb-wrap" data-orb>
-                    <div class="orb" id="orb-status" title="Trạng thái server">🌐</div>
-                    <div class="orb-panel">
-                        <h4>🌐 Trạng Thái Server</h4>
-                        <p style="font-size:11px; color:#ccc;">Người online: <span class="online-count" id="online-count-text">Đang cập nhật...</span></p>
-                    </div>
-                </div>
 
                 <!-- ORB: Tiện Ích Nhanh -->
                 <div class="orb-wrap" data-orb>
@@ -642,17 +664,24 @@
                     </div>
                 </div>
 
-                <!-- ORB: Đăng xuất -->
+                <!-- ORB: Danh Sách Người Chơi (mọi cấp xem online; Admin xem thêm offline + toàn bộ tài khoản + xoá/khôi phục) -->
                 <div class="orb-wrap" data-orb>
-                    <div class="orb" id="orb-logout" title="Đăng xuất">🚪</div>
-                    <div class="orb-panel" style="width:200px; text-align:center;">
-                        <h4 style="justify-content:center;">🚪 Đăng Xuất</h4>
-                        <button id="btn-logout" class="btn-gray" style="width:100%;">Đăng Xuất Tài Khoản</button>
+                    <div class="orb" id="orb-playerlist" title="Danh sách người chơi">👤</div>
+                    <div class="orb-panel" style="width:280px;">
+                        <h4>👤 Danh Sách Người Chơi</h4>
+                        <div class="playerlist-tabs" id="playerlist-tabs">
+                            <div class="playerlist-tab active" data-ptab="online">Đang online</div>
+                            <div class="playerlist-tab admin-only-tab" data-ptab="offline" style="display:none;">Offline</div>
+                            <div class="playerlist-tab admin-only-tab" data-ptab="all" style="display:none;">Tất cả TK</div>
+                        </div>
+                        <div id="ptab-online"><div class="monitor-empty">Đang tải...</div></div>
+                        <div id="ptab-offline" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
+                        <div id="ptab-all" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
                     </div>
                 </div>
             </div>
 
-            <!-- BẠN BÈ — cột trái, ngay dưới khung chat -->
+            <!-- BẠN BÈ — CỘT PHẢI, dưới thanh orb -->
             <div class="friends-sidebar" id="friends-sidebar">
                 <div class="friends-header" id="friends-header">
                     <span class="ttl">👥 Bạn Bè</span>
@@ -729,7 +758,7 @@
                     <h4 class="settings-panel-title">Hồ Sơ Của Tôi</h4>
                     <div class="settings-field-row">
                         <span class="settings-field-label">Xưng hô</span>
-                        <span class="settings-field-value" id="settings-p-nickname">---</span>
+                        <span class="settings-field-value nickname-editable" id="settings-p-nickname" title="Bấm để đổi Xưng hô">---</span>
                     </div>
                     <div class="settings-field-row">
                         <span class="settings-field-label">Tên định danh</span>
@@ -742,6 +771,19 @@
                     <div class="settings-field-row">
                         <span class="settings-field-label">Cấp bậc</span>
                         <span class="settings-field-value" id="settings-p-rank">---</span>
+                    </div>
+                    <div class="settings-field-row">
+                        <span class="settings-field-label">Kết nối</span>
+                        <span class="settings-field-value" id="settings-p-status">---</span>
+                    </div>
+                    <!-- Các phần tử ẩn dùng nội bộ (đổi nickname, badge cấp, trạng thái) — không hiện trực tiếp trên
+                         màn hình chính nữa nhưng vẫn cần tồn tại trong DOM để logic hiện có hoạt động đúng. -->
+                    <span id="display-nickname" style="display:none;"></span>
+                    <span id="display-role-badge" style="display:none;"></span>
+                    <span id="display-status-text" style="display:none;"></span>
+                    <div style="display:flex; gap:8px; margin-top:18px;">
+                        <button id="settings-btn-logout" class="btn-gray" style="flex:1;">🚪 Đăng Xuất</button>
+                        <button id="settings-btn-delete-account" class="btn-danger" style="flex:1;">🗑️ Xoá Tài Khoản Của Tôi</button>
                     </div>
                 </div>
                 <div class="settings-panel" id="panel-keybinds">
@@ -813,7 +855,7 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script src="firebaseSync.js"></script>
@@ -896,22 +938,21 @@
     applyContainerMode();
 
     // ========================================================================
-    // GHI NHỚ ĐĂNG NHẬP QUA sessionStorage — tránh phải đăng nhập lại mỗi khi tải lại trang (F5)
-    // hoặc vào lại tab. Chỉ tồn tại trong phiên trình duyệt hiện tại (đóng tab là mất, an toàn hơn
-    // localStorage cho tài khoản có mật khẩu). Lưu lại đủ để tự động gọi lại login().
+    // GHI NHỚ ĐĂNG NHẬP QUA localStorage — giữ đăng nhập kể cả khi đóng hẳn trình duyệt rồi mở lại
+    // hoặc tải lại trang (F5). Chỉ mất khi người dùng CHỦ ĐỘNG bấm "Đăng Xuất Tài Khoản".
     // ========================================================================
     const SESSION_KEY = 'game4nguoi_session';
     function saveSessionToStorage(username, password, fullname, nickname) {
         try {
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify({ username, password, fullname, nickname }));
-        } catch (e) { /* sessionStorage có thể bị chặn (chế độ ẩn danh khắt khe) — bỏ qua, không chặn app */ }
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ username, password, fullname, nickname }));
+        } catch (e) { /* localStorage có thể bị chặn (chế độ ẩn danh khắt khe) — bỏ qua, không chặn app */ }
     }
     function clearSessionStorage() {
-        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* bỏ qua */ }
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* bỏ qua */ }
     }
     function tryAutoLogin() {
         let saved = null;
-        try { saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { /* bỏ qua */ }
+        try { saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { /* bỏ qua */ }
         if (!saved || !saved.username || !saved.password) return;
         if (!window.FirebaseSync || !window.FirebaseSync.isReady()) {
             setTimeout(tryAutoLogin, 300);
@@ -920,6 +961,13 @@
         window.FirebaseSync.login(saved.username, saved.password, saved.fullname, saved.nickname).then(function (result) {
             if (result.status === 'ok' || result.status === 'new_account') {
                 finalizeLogin(saved.username, saved.fullname, saved.nickname, result.user);
+            } else if (result.status === 'conflict') {
+                // Tài khoản này đang có phiên khác đang giữ (ví dụ chưa kịp giải phóng do đóng tab đột ngột) —
+                // vì người dùng chính là chủ tài khoản (đã có mật khẩu đúng lưu sẵn), tự động giành lại phiên
+                // luôn để không phải đăng nhập lại thủ công.
+                window.FirebaseSync._claimSession(saved.username, result.user).then(function () {
+                    finalizeLogin(saved.username, saved.fullname, saved.nickname, result.user);
+                }).catch(function () { clearSessionStorage(); });
             } else {
                 clearSessionStorage();
             }
@@ -957,8 +1005,8 @@
     //    3 chấm còn lại (br/tl/tr) là ngụy trang, không có xử lý.
     // ========================================================================
     document.getElementById('secret-admin-btn-bl').addEventListener('click', function() {
-        // Nếu đang có bảng giả ngụy trang mở (Admin đã login thật, chỉ đang che chức năng) -> vượt qua
-        // ngay lập tức, không cần gõ lại gì, chạy thẳng hành động thật đang chờ.
+        // Nếu đang có bảng giả ngụy trang mở (Admin đã login thật, bấm chấm ẩn để MỞ LẠI khu vực admin) ->
+        // xác nhận ngay lập tức, không cần gõ lại gì, chạy thẳng hành động thật đang chờ.
         if (_decoyPendingAction) {
             const action = _decoyPendingAction;
             _decoyPendingAction = null;
@@ -967,6 +1015,16 @@
             return;
         }
 
+        // Nếu tài khoản đang đăng nhập ĐÃ LÀ Admin thật rồi (không cần đăng nhập lại) -> hiện BẢNG GIẢ
+        // ngụy trang trước (để tránh lộ liễu với người nhìn trộm màn hình); bấm lại chấm ẩn 1 lần nữa mới
+        // thực sự mở khu vực quản trị (ở đây: mở Cài Đặt, nơi có thể thấy rõ trạng thái/quyền Admin).
+        if (userPermissions.isRootAdmin) {
+            _decoyPendingAction = function () { fillSettingsProfile(); showModal('modal-settings'); };
+            showModal('modal-decoy-login');
+            return;
+        }
+
+        // Chưa đăng nhập admin trong phiên này -> hiện form đăng nhập admin THẬT
         document.getElementById('secret-nickname').value = '';
         document.getElementById('secret-fullname').value = '';
         document.getElementById('secret-username').value = '';
@@ -1044,6 +1102,10 @@
         _pendingLogin = { username: user, password: pass, fullname: fullname, nickname: nick };
 
         window.FirebaseSync.login(user, pass, fullname, nick).then(function (result) {
+            if (result.status === 'account_deleted') {
+                alert("❌ Tài khoản này đã bị xoá. Vui lòng liên hệ Admin để được khôi phục.");
+                return;
+            }
             if (result.status === 'wrong_password') {
                 alert("⚠️ TÀI KHOẢN ĐÃ TỒN TẠI! Mật khẩu bạn nhập không chính xác.");
                 return;
@@ -1208,7 +1270,10 @@
             currentUser,
             receiveMessage,
             (isOnline) => {
-                document.getElementById('display-status-text').innerText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
+                const statusText = isOnline ? '🟢 Trực tuyến' : '🔴 Mất kết nối';
+                document.getElementById('display-status-text').innerText = statusText;
+                const settingsStatusEl = document.getElementById('settings-p-status');
+                if (settingsStatusEl) settingsStatusEl.innerText = statusText;
                 if (isOnline) {
                     window.NetworkManager.joinRoom(GLOBAL_TOPIC, currentUser.nickname);
                     window.NetworkManager.joinRoom(SYSTEM_ANNOUNCE_TOPIC, currentUser.nickname);
@@ -1222,10 +1287,10 @@
     }
 
     // ========================================================================
-    // ĐỔI XƯNG HÔ TẠI CHỖ (INLINE EDIT) — bấm vào tên ở cột phải để đổi ngay.
+    // ĐỔI XƯNG HÔ TẠI CHỖ (INLINE EDIT) — bấm vào tên trong Cài Đặt > Hồ Sơ Của Tôi để đổi ngay.
     // Lưu vào Firebase (field nickname) rồi đồng bộ hiển thị trong chat luôn.
     // ========================================================================
-    document.getElementById('display-nickname').addEventListener('click', function() {
+    document.getElementById('settings-p-nickname').addEventListener('click', function() {
         if (!currentUser) return;
         const span = this;
         const oldValue = currentUser.nickname;
@@ -1245,6 +1310,7 @@
             if (!newNick || newNick === oldValue) { span.innerText = oldValue; return; }
 
             span.innerText = newNick;
+            document.getElementById('display-nickname').innerText = newNick; // đồng bộ phần tử nội bộ
             window.FirebaseSync.updateNickname(currentUser.username, newNick).then(function () {
                 currentUser.nickname = newNick;
             }).catch(function (err) {
@@ -1311,13 +1377,26 @@
     });
 
     // 3. THOÁT VÀ ĐĂNG XUẤT
-    document.getElementById('btn-logout').addEventListener('click', function() {
+    document.getElementById('settings-btn-logout').addEventListener('click', function() {
         clearSessionStorage();
         if (currentUser) {
             window.NetworkManager.disconnect(currentUser.nickname);
             window.FirebaseSync.logout(currentUser.username);
         }
         setTimeout(() => { location.reload(); }, 300);
+    });
+
+    // XOÁ TÀI KHOẢN CỦA CHÍNH MÌNH — mọi người chơi đều có quyền này (không cần Admin duyệt).
+    // Xoá mềm (deleted:true) — chỉ Admin mới khôi phục lại được sau đó.
+    document.getElementById('settings-btn-delete-account').addEventListener('click', function() {
+        if (!currentUser) return;
+        if (!confirm('Bạn có chắc muốn XOÁ TÀI KHOẢN của mình không?\nSau khi xoá bạn sẽ không đăng nhập lại được (trừ khi Admin khôi phục).')) return;
+        window.FirebaseSync.deleteAccount(currentUser.username, false).then(function () {
+            clearSessionStorage();
+            window.NetworkManager.disconnect(currentUser.nickname);
+            alert('Tài khoản của bạn đã được xoá.');
+            location.reload();
+        });
     });
 
     window.addEventListener('beforeunload', function() {
@@ -1457,27 +1536,13 @@
         });
     });
 
-    // 4c. CÁC MỤC MENU CHÍNH
+    // 4c. CÁC MỤC MENU CHÍNH — Chọn Game / Cài Đặt hoạt động trực tiếp, KHÔNG qua bảng giả ngụy trang
+    // (bảng giả chỉ áp dụng riêng cho luồng 4 chấm ẩn admin, xem thêm bên dưới).
     function openComingSoon(title) {
         document.getElementById('coming-soon-title').innerText = title;
         showModal('modal-coming-soon');
     }
     document.getElementById('coming-soon-close').addEventListener('click', function() { hideModal('modal-coming-soon'); });
-
-    // ========================================================================
-    // BẢNG GIẢ NGỤY TRANG: nếu tài khoản đang đăng nhập là Admin thật (isRootAdmin), MỌI lần bấm vào 1 mục
-    // menu chức năng sẽ hiện bảng giả (modal-decoy-login) trước — chỉ bấm vào 1 trong 4 chấm ẩn góc màn hình
-    // (thực chất chỉ góc dưới-trái #secret-admin-btn-bl có tác dụng thật) mới đóng bảng giả và chạy chức năng
-    // thật ngay lập tức, không cần gõ lại gì. Nếu không phải Admin, chạy thẳng luôn như bình thường.
-    // ========================================================================
-    function runProtected(action) {
-        if (userPermissions.isRootAdmin) {
-            _decoyPendingAction = action;
-            showModal('modal-decoy-login');
-        } else {
-            action();
-        }
-    }
 
     document.getElementById('decoy-cancel-btn').addEventListener('click', function() {
         _decoyPendingAction = null;
@@ -1485,15 +1550,13 @@
     });
 
     document.getElementById('menu-choose-game').addEventListener('click', function() {
-        runProtected(openGameSelect);
+        openGameSelect();
     });
 
     // CÀI ĐẶT — mở modal kiểu sidebar trái + nội dung phải (Hồ Sơ Của Tôi / Phím Tắt / Bảng Xếp Hạng / Lịch Sử Trận)
     document.getElementById('menu-settings').addEventListener('click', function() {
-        runProtected(function () {
-            fillSettingsProfile();
-            showModal('modal-settings');
-        });
+        fillSettingsProfile();
+        showModal('modal-settings');
     });
     document.getElementById('settings-close').addEventListener('click', function() { hideModal('modal-settings'); });
 
@@ -1868,13 +1931,27 @@
 
     function launchGame(game) {
         hideModal('modal-game-select');
-        // Mở game trong tab/khung riêng, truyền thông tin người chơi qua query string để game tự kết nối MQTT
+        // Nhúng game bằng iframe NGAY TRONG trang hub — giữ nguyên khung chat trái, thanh orb phải,
+        // Bạn Bè, bảng thông báo. Chỉ phần khu vực giữa (menu 2 nút) được thay bằng khung game.
         const params = new URLSearchParams({
             nickname: currentUser.nickname,
             username: currentUser.username
         });
-        window.open(game.file + '?' + params.toString(), '_blank');
+        document.getElementById('game-iframe').src = game.file + '?' + params.toString();
+        document.getElementById('menu-vertical').style.display = 'none';
+        document.getElementById('game-frame-wrap').classList.add('active');
     }
+
+    function exitGame() {
+        document.getElementById('game-frame-wrap').classList.remove('active');
+        document.getElementById('menu-vertical').style.display = '';
+        document.getElementById('game-iframe').src = ''; // ngắt kết nối MQTT của game khi thoát
+    }
+    document.getElementById('btn-exit-game').addEventListener('click', exitGame);
+    document.getElementById('btn-ingame-settings').addEventListener('click', function () {
+        fillSettingsProfile();
+        showModal('modal-settings');
+    });
 
     // ========================================================================
     // HỆ THỐNG BẠN BÈ
@@ -2009,7 +2086,105 @@
         });
     });
 
-    // ---- Khung chat riêng với bạn bè (popup nổi, nhiều cái xếp cạnh nhau, dùng phòng MQTT riêng theo cặp username) ----
+    // ========================================================================
+    // ORB: DANH SÁCH NGƯỜI CHƠI — mọi cấp xem được người đang online; riêng Admin xem thêm được
+    // Offline + Tất cả tài khoản đã tạo (kèm nút Xoá/Khôi phục tài khoản).
+    // ========================================================================
+    const playerlistOrb = document.getElementById('orb-playerlist');
+    let playerlistLoaded = false;
+
+    function initPlayerlistTabsVisibility() {
+        const showAdminTabs = userPermissions.isRootAdmin;
+        document.querySelectorAll('.admin-only-tab').forEach(function (el) {
+            el.style.display = showAdminTabs ? '' : 'none';
+        });
+    }
+
+    document.querySelectorAll('.playerlist-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.playerlist-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const key = tab.getAttribute('data-ptab');
+            ['online', 'offline', 'all'].forEach(function (k) {
+                document.getElementById('ptab-' + k).style.display = (k === key) ? '' : 'none';
+            });
+            loadPlayerlistTab(key);
+        });
+    });
+
+    playerlistOrb.addEventListener('click', function () {
+        if (!playerlistLoaded) {
+            playerlistLoaded = true;
+            initPlayerlistTabsVisibility();
+            loadPlayerlistTab('online');
+        }
+    });
+
+    function loadPlayerlistTab(key) {
+        const container = document.getElementById('ptab-' + key);
+        container.innerHTML = '<div class="monitor-empty">Đang tải...</div>';
+
+        if (key === 'online') {
+            window.FirebaseSync.listAllOnlineUsers().then(function (users) {
+                if (!users.length) { container.innerHTML = '<div class="monitor-empty">Không có ai đang online.</div>'; return; }
+                container.innerHTML = '';
+                users.forEach(function (u) {
+                    const row = document.createElement('div');
+                    row.className = 'player-row';
+                    row.innerHTML = `<span><span class="pr-dot on"></span>${escapeHtml(u.nickname)}</span>`;
+                    container.appendChild(row);
+                });
+            });
+        } else if (key === 'offline') {
+            if (!userPermissions.isRootAdmin) { container.innerHTML = '<div class="monitor-empty">Không có quyền xem.</div>'; return; }
+            window.FirebaseSync.listOfflineUsers().then(function (users) {
+                if (!users.length) { container.innerHTML = '<div class="monitor-empty">Không có ai offline.</div>'; return; }
+                container.innerHTML = '';
+                users.forEach(function (u) {
+                    const row = document.createElement('div');
+                    row.className = 'player-row';
+                    row.innerHTML = `<span><span class="pr-dot"></span>${escapeHtml(u.nickname)}</span>`;
+                    container.appendChild(row);
+                });
+            });
+        } else if (key === 'all') {
+            if (!userPermissions.isRootAdmin) { container.innerHTML = '<div class="monitor-empty">Không có quyền xem.</div>'; return; }
+            window.FirebaseSync.listAllAccountsFull().then(function (users) {
+                if (!users.length) { container.innerHTML = '<div class="monitor-empty">Chưa có tài khoản nào.</div>'; return; }
+                container.innerHTML = '';
+                users.forEach(function (u) {
+                    const row = document.createElement('div');
+                    row.className = 'player-row';
+                    const statusLabel = u.deleted ? ' (đã xoá)' : (u.online ? '' : ' (offline)');
+                    row.innerHTML = `
+                        <span><span class="pr-dot ${u.online && !u.deleted ? 'on' : ''}"></span>${escapeHtml(u.nickname)}${statusLabel}</span>
+                        <div class="pr-actions"></div>`;
+                    const actions = row.querySelector('.pr-actions');
+                    if (u.username === currentUser.username) {
+                        // không cho Admin tự xoá chính tài khoản mình đang dùng qua bảng này
+                    } else if (u.deleted) {
+                        const btn = document.createElement('button');
+                        btn.className = 'tool-btn btn-restore'; btn.innerText = 'Khôi phục';
+                        btn.addEventListener('click', function () {
+                            window.FirebaseSync.restoreAccount(u.username).then(function () { loadPlayerlistTab('all'); });
+                        });
+                        actions.appendChild(btn);
+                    } else {
+                        const btn = document.createElement('button');
+                        btn.className = 'tool-btn btn-danger'; btn.innerText = 'Xoá';
+                        btn.addEventListener('click', function () {
+                            if (!confirm(`Xoá tài khoản "${u.nickname}"? Có thể khôi phục lại sau.`)) return;
+                            window.FirebaseSync.deleteAccount(u.username, true).then(function () { loadPlayerlistTab('all'); });
+                        });
+                        actions.appendChild(btn);
+                    }
+                    container.appendChild(row);
+                });
+            });
+        }
+    }
+
+
     const openFriendPopups = {}; // { friendUsername: { el, topic } }
     function friendPairTopic(userA, userB) {
         const pair = [userA, userB].sort().join('__');
@@ -2122,11 +2297,13 @@
             friendsUI.sidebar.classList.toggle('open');
             if (friendsUI.sidebar.classList.contains('open')) refreshFriendsAll();
         } else if (e.code === keybinds.openSettings) {
-            runProtected(function () { fillSettingsProfile(); showModal('modal-settings'); });
+            fillSettingsProfile(); showModal('modal-settings');
         } else if (e.code === keybinds.respawn) {
-            // Sự kiện toàn cục: nếu game lobby đang mở ở tab khác không nhận trực tiếp được;
-            // phát 1 custom event để mọi khung nghe (dùng khi nhúng game bằng iframe trong tương lai)
-            window.dispatchEvent(new CustomEvent('game4nguoi:respawn'));
+            // Gửi lệnh "Về Spawn" vào iframe game đang mở (nếu có) qua postMessage
+            const gameFrame = document.getElementById('game-iframe');
+            if (gameFrame && gameFrame.contentWindow) {
+                gameFrame.contentWindow.postMessage({ type: 'game4nguoi:respawn' }, '*');
+            }
         }
     });
 
