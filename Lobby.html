@@ -92,7 +92,6 @@
 
 <div id="welcome-banner">Chào mừng, <span id="welcome-name">---</span>! 👋</div>
 <div id="hud">
-    <button class="hud-btn" id="btn-back-hub">⬅ Về Sảnh Chính</button>
     <button class="hud-btn" id="btn-respawn">🔄 Về Spawn</button>
 </div>
 <div id="player-count">🟢 1 người đang ở đây</div>
@@ -102,7 +101,7 @@
     <div id="world"></div>
 </div>
 
-<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
 <script>
     // ============================================================================
     // SẢNH CHỜ PARKOUR MULTIPLAYER — file độc lập, không phụ thuộc index.html.
@@ -203,13 +202,10 @@
         me.x = SPAWN.x; me.y = SPAWN.y; me.vx = 0; me.vy = 0;
     }
     document.getElementById('btn-respawn').addEventListener('click', resetToSpawn);
-    // Cho phép index.html (nếu nhúng iframe trong tương lai) gửi lệnh respawn qua phím tắt
-    window.addEventListener('game4nguoi:respawn', resetToSpawn);
-
-    document.getElementById('btn-back-hub').addEventListener('click', function () {
-        window.close();
-        // Một số trình duyệt chặn window.close() nếu tab không phải do script mở -> fallback
-        setTimeout(function () { location.href = '../index.html'; }, 150);
+    // Nhận lệnh "Về Spawn" từ trang hub (index.html) qua postMessage — vì lobby.html chạy trong 1 <iframe>
+    // riêng, window.dispatchEvent ở trang cha không tự lan được vào đây.
+    window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'game4nguoi:respawn') resetToSpawn();
     });
 
     // ---- Bàn phím ----
