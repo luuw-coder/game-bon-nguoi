@@ -141,6 +141,13 @@
     // ========================================================================
     let _permissionListenerRef = null;
     let _onPermissionChangedCallback = null;
+    let _friendRequestsListenerRef = null;
+    function _stopWatchingFriendRequests() {
+        if (_friendRequestsListenerRef) {
+            _friendRequestsListenerRef.off('value');
+            _friendRequestsListenerRef = null;
+        }
+    }
 
     function _watchOwnPermissions(username) {
         _stopWatchingPermissions();
@@ -232,6 +239,10 @@
                 }
 
                 const userData = snapshot.val();
+
+                if (userData.deleted) {
+                    return { status: 'account_deleted' };
+                }
 
                 if (userData.password !== password) {
                     return { status: 'wrong_password' };
@@ -656,17 +667,87 @@
             updates['friends/' + encodeUserKey(myUsername) + '/' + encodeUserKey(friendUsername)] = null;
             updates['friends/' + encodeUserKey(friendUsername) + '/' + encodeUserKey(myUsername)] = null;
             return db.ref().update(updates).then(function () { return { status: 'ok' }; });
+        },
+
+        // ========================================================================
+        // VI. QUẢN LÝ TÀI KHOẢN — XOÁ (MỀM) / KHÔI PHỤC
+        // ========================================================================
+
+        /**
+         * XOÁ TÀI KHOẢN (xoá mềm — đánh dấu deleted:true, KHÔNG mất dữ liệu để Admin có thể khôi phục).
+         * Tài khoản đã bị đánh dấu xoá sẽ không đăng nhập được nữa (login() sẽ từ chối) cho tới khi
+         * Admin bấm Khôi Phục.
+         * actorUsername: người thực hiện thao tác (dùng khi tự người chơi xoá tài khoản của chính mình).
+         */
+        deleteAccount: function (targetUsername, actorIsAdmin) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USER(targetUsername).update({
+                deleted: true,
+                deletedAt: firebase.database.ServerValue.TIMESTAMP,
+                activeSession: null
+            }).then(function () { return { status: 'ok' }; });
+        },
+
+        /**
+         * KHÔI PHỤC TÀI KHOẢN ĐÃ XOÁ — chỉ Admin gọi hàm này (kiểm tra quyền ở phía giao diện trước khi gọi).
+         */
+        restoreAccount: function (targetUsername) {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USER(targetUsername).update({ deleted: false, deletedAt: null })
+                .then(function () { return { status: 'ok' }; });
+        },
+
+        /**
+         * DANH SÁCH ĐẦY ĐỦ TẤT CẢ TÀI KHOẢN ĐÃ TẠO (chỉ dành cho Admin) — bao gồm cả người đang online,
+         * offline, và đã bị xoá mềm. Trả về mảng:
+         * [{ username, nickname, fullname, level, isRootAdmin, online, deleted }]
+         */
+        listAllAccountsFull: function () {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USERS().once('value').then(function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val() || {};
+                    result.push({
+                        username: decodeUserKey(child.key),
+                        nickname: val.nickname || '',
+                        fullname: val.fullname || '',
+                        level: (typeof val.level === 'number') ? val.level : 1,
+                        isRootAdmin: !!val.isRootAdmin,
+                        online: !!(val.activeSession && val.activeSession.sessionId),
+                        deleted: !!val.deleted
+                    });
+                });
+                return result;
+            });
+        },
+
+        /**
+         * DANH SÁCH NGƯỜI OFFLINE (không đang có phiên hoạt động, chưa bị xoá) — dùng cho tab "Offline"
+         * trong Danh Sách Người Chơi, chỉ Admin thấy được tab này.
+         */
+        listOfflineUsers: function () {
+            if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
+            return REF_USERS().once('value').then(function (snapshot) {
+                const result = [];
+                snapshot.forEach(function (child) {
+                    const val = child.val() || {};
+                    const isOnline = !!(val.activeSession && val.activeSession.sessionId);
+                    if (!isOnline && !val.deleted) {
+                        result.push({
+                            username: decodeUserKey(child.key),
+                            nickname: val.nickname || '',
+                            fullname: val.fullname || ''
+                        });
+                    }
+                });
+                return result;
+            });
         }
     };
 
-    // Tự động giải phóng phiên khi đóng tab/trình duyệt
-    window.addEventListener('beforeunload', function () {
-        if (_currentUsername && db) {
-            // Dùng update đồng bộ tốt nhất có thể (không đảm bảo luôn kịp,
-            // nhưng đây là best-effort tiêu chuẩn cho beforeunload)
-            REF_USER(_currentUsername).child('activeSession').remove();
-            if (_currentSessionId) REF_KICKS(_currentSessionId).remove();
-        }
-    });
+    // LƯU Ý QUAN TRỌNG: KHÔNG tự động xoá activeSession khi đóng tab/tải lại trang (beforeunload) nữa —
+    // người chơi phải luôn giữ được đăng nhập kể cả khi đóng hẳn trình duyệt rồi mở lại. Phiên chỉ được
+    // giải phóng khi người dùng CHỦ ĐỘNG bấm "Đăng Xuất" (gọi FirebaseSync.logout ở trên).
 
 })(window);
