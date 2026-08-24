@@ -540,7 +540,7 @@
         sendFriendRequest: function (fromUsername, fromNickname, targetNickname, targetFullname) {
             if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
             const wantNick = String(targetNickname || '').trim().toLowerCase();
-            const wantFull = String(targetFullname || '').trim();
+            const wantFull = String(targetFullname || '').trim().toLowerCase();
             if (!wantNick || !wantFull) return Promise.resolve({ status: 'not_found' });
 
             return REF_USERS().once('value').then(function (snapshot) {
@@ -548,7 +548,7 @@
                 snapshot.forEach(function (child) {
                     const val = child.val();
                     if (val && String(val.nickname || '').trim().toLowerCase() === wantNick
-                        && String(val.fullname || '').trim() === wantFull) {
+                        && String(val.fullname || '').trim().toLowerCase() === wantFull) {
                         targetUsername = decodeUserKey(child.key);
                     }
                 });
@@ -587,6 +587,9 @@
                     });
                 });
                 if (typeof callback === 'function') callback(result);
+            }, function (err) {
+                // Thường là do Firebase Rules chưa mở quyền đọc "friendRequests" — log để dễ chẩn đoán
+                console.error('Lỗi lắng nghe lời mời kết bạn (kiểm tra Firebase Rules node "friendRequests"):', err);
             });
         },
 
