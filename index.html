@@ -18,13 +18,14 @@
         /* FORM ĐĂNG NHẬP */
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 4px; color: #ccc; font-weight: bold; font-size: 13px; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
-        input:focus { border-color: #ff9800; outline: none; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-green { background: #4caf50; color: #fff; width: 100%; font-size: 15px; margin-top: 10px; } 
-        .btn-green:hover { background: #45a049; }
-        .btn-gray { background: #444; color: #fff; } .btn-gray:hover { background: #555; }
-        .btn-purple { background: #9c27b0; color: #fff; } .btn-purple:hover { background: #7b1fa2; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        input:focus { border-color: #ff9800; outline: none; box-shadow: 0 0 0 3px rgba(255,152,0,0.15); }
+        button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+        button:active { transform: scale(0.96); }
+        .btn-green { background: #4caf50; color: #fff; width: 100%; font-size: 15px; margin-top: 10px; }
+        .btn-green:hover { background: #45a049; box-shadow: 0 4px 14px rgba(76,175,80,0.35); transform: translateY(-1px); }
+        .btn-gray { background: #444; color: #fff; } .btn-gray:hover { background: #555; transform: translateY(-1px); }
+        .btn-purple { background: #9c27b0; color: #fff; } .btn-purple:hover { background: #7b1fa2; box-shadow: 0 4px 14px rgba(156,39,176,0.35); transform: translateY(-1px); }
 
         /* Ô tài khoản có suffix @game4nguoi.com cố định (trừ chế độ admin) */
         .username-input-group { display: flex; align-items: stretch; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
@@ -80,7 +81,9 @@
         .emoji-item:hover { transform: scale(1.3); }
 
         /* CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC, KIỂU THANH MENU CHÍNH MINECRAFT */
-        .menu-center { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; align-self: stretch; padding: 0 16px; }
+        .menu-center { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-width: 0; align-self: stretch; padding: 22px 16px 0; position: relative; z-index: 4; pointer-events: none; }
+        .menu-center .menu-vertical { pointer-events: auto; max-width: 220px; }
+        .menu-center .menu-item-v { padding: 12px 18px; }
 
         .menu-vertical { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 380px; }
         .menu-item-v {
@@ -93,22 +96,60 @@
         .menu-icon-v { font-size: 24px; }
         .menu-label-v { font-size: 16px; color: #eee; font-weight: bold; letter-spacing: 1px; }
 
-        /* KHUNG GAME NHÚNG — hiện thay cho menu-vertical khi đã chọn 1 game, chiếm toàn bộ .menu-center,
-           chat trái + orb phải + bạn bè vẫn giữ nguyên hiển thị đè lên trên (z-index cao hơn iframe). */
-        .game-frame-wrap { display: none; width: 100%; height: 100vh; position: relative; animation: fadeIn 0.35s ease; }
-        .game-frame-wrap.active { display: block; }
-        #game-iframe { width: 100%; height: 100%; border: none; background: #0d1b2a; }
-        .game-topbar {
-            position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 495;
-            display: flex; gap: 10px; align-items: center;
+        /* ========================================================================
+           SẢNH CHÍNH — LỚP NHÂN VẬT NỀN (thay cho game Lobby riêng): nhân vật của mọi người chơi
+           đang online xuất hiện ngay trên nền màn hình chính, phía sau chat/orb/bạn bè (z-index thấp).
+           Không cuộn camera — giới hạn di chuyển trong đúng khung nhìn hiện tại.
+           ======================================================================== */
+        #hub-stage {
+            position: fixed; inset: 0; z-index: 1; overflow: hidden;
+            background: radial-gradient(ellipse at 50% 30%, #1b2a4a 0%, #121212 70%);
         }
-        .game-topbar button {
-            background: rgba(24,24,24,0.6); backdrop-filter: blur(6px); color: #fff; border: 1px solid rgba(255,255,255,0.15);
-            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 6px;
+        #hub-ground {
+            position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
+            background: linear-gradient(180deg, #2d4531 0%, #1c2e1f 100%);
+            border-top: 3px solid #588157; box-shadow: 0 -6px 20px rgba(0,0,0,0.3);
         }
-        .game-topbar button:hover { background: rgba(255,152,0,0.7); border-color: #ff9800; }
-        .game-topbar .gear-btn { font-size: 16px; padding: 8px 12px; }
+        .hub-player {
+            position: absolute; width: 30px; height: 42px; z-index: 2; transition: filter 0.15s ease;
+        }
+        .hub-player-body { position: absolute; bottom: 0; left: 4px; width: 22px; height: 28px; border-radius: 7px 7px 3px 3px; box-shadow: inset -4px -4px 0 rgba(0,0,0,0.15); }
+        .hub-player-head { position: absolute; bottom: 26px; left: 6px; width: 18px; height: 18px; border-radius: 50%; background: #ffd8a8; box-shadow: inset -3px -3px 0 rgba(0,0,0,0.12); }
+        .hub-player-leg { position: absolute; bottom: -6px; width: 8px; height: 11px; border-radius: 2px; background: #2b2b2b; }
+        .hub-player-leg.l { left: 5px; } .hub-player-leg.r { left: 17px; }
+        .hub-player.walking .hub-player-leg.l { animation: hubLegSwing 0.32s infinite alternate; }
+        .hub-player.walking .hub-player-leg.r { animation: hubLegSwing 0.32s infinite alternate-reverse; }
+        @keyframes hubLegSwing { from { transform: translateY(0) rotate(-14deg); } to { transform: translateY(-2px) rotate(14deg); } }
+        .hub-player-name {
+            position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%);
+            font-size: 11px; font-weight: bold; color: #fff; white-space: nowrap;
+            background: rgba(0,0,0,0.45); padding: 2px 8px; border-radius: 10px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none;
+        }
+        .hub-player.me .hub-player-name { color: #ffd54f; }
+        .hub-jump-dust { position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 26px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.35); opacity: 0; pointer-events: none; }
+        .hub-jump-dust.show { animation: hubDustPop 0.4s ease forwards; }
+        @keyframes hubDustPop { 0% { opacity: 0.6; transform: translateX(-50%) scale(0.4); } 100% { opacity: 0; transform: translateX(-50%) scale(1.6); } }
+        #hub-hint {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 3;
+            background: rgba(0,0,0,0.4); color: #ccc; font-size: 11px; padding: 6px 14px; border-radius: 16px;
+            pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+        }
+        #hub-hint.show { opacity: 1; }
+
+        /* Sao lấp lánh trang trí nền sảnh chính — thuần CSS, không cần ảnh */
+        .hub-star { position: absolute; border-radius: 50%; background: #fff; opacity: 0.5; animation: hubTwinkle 3s ease-in-out infinite; }
+        @keyframes hubTwinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.75; } }
+        /* Bóng đổ mềm dưới chân nhân vật, phóng to/thu nhỏ nhẹ theo bước nhảy để tạo chiều sâu */
+        .hub-player-shadow {
+            position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+            width: 22px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.35);
+            filter: blur(1px); transition: width 0.15s ease, opacity 0.15s ease;
+        }
+        .hub-player.airborne .hub-player-shadow { width: 14px; opacity: 0.5; }
+        /* Cỏ lay động nhẹ trên viền nền đất cho sinh động */
+        .hub-grass-blade { position: absolute; bottom: 100%; width: 3px; height: 10px; background: #6a9b5e; border-radius: 2px 2px 0 0; transform-origin: bottom center; animation: hubGrassSway 2.6s ease-in-out infinite; }
+        @keyframes hubGrassSway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 
         /* MODAL CÀI ĐẶT — kiểu sidebar trái + nội dung phải (giống Bloxd.io) */
         .settings-modal-box {
@@ -331,23 +372,11 @@
         .keybind-key.listening { background: #ff9800; color: #000; animation: pulseKey 0.9s infinite; }
         @keyframes pulseKey { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 
-        /* Mục Bạn Bè — CỘT PHẢI, phía dưới thanh orb, sát mép phải */
-        .friends-sidebar {
-            position: fixed; bottom: 14px; right: 14px; z-index: 480; width: 280px; max-width: 280px;
-            background: rgba(24, 24, 24, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-            padding: 10px; max-height: 60vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-        .friends-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; cursor: pointer; user-select: none; }
-        .friends-header span.ttl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        .friends-badge { background: #f44336; color: #fff; font-size: 10px; font-weight: bold; min-width: 16px; height: 16px; border-radius: 8px; display: none; align-items: center; justify-content: center; padding: 0 4px; margin-left: 6px; }
-        .friends-badge.show { display: inline-flex; }
-        .friends-body { display: none; overflow-y: auto; flex-direction: column; gap: 10px; }
-        .friends-sidebar.open .friends-body { display: flex; }
-        .friends-tabs { display: flex; gap: 5px; }
+        /* Bạn Bè giờ là 1 orb tròn bình thường trong .side-utils (dùng chung .orb, .orb-panel, .orb-badge) */
+        .friends-tabs { display: flex; gap: 5px; margin-bottom: 8px; }
         .friends-tab { flex: 1; text-align: center; background: #222; padding: 5px; border-radius: 5px; font-size: 10px; cursor: pointer; color: #ccc; }
         .friends-tab.active { background: #ff9800; color: #000; font-weight: bold; }
-        .friend-row { display: flex; align-items: center; justify-content: space-between; background: rgba(34,34,34,0.7); border-radius: 6px; padding: 6px 8px; font-size: 11px; cursor: pointer; }
+        .friend-row { display: flex; align-items: center; justify-content: space-between; background: rgba(34,34,34,0.7); border-radius: 6px; padding: 6px 8px; font-size: 11px; cursor: pointer; margin-bottom: 5px; }
         .friend-row:hover { background: rgba(50,50,50,0.85); }
         .friend-row .fr-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; margin-right: 6px; flex-shrink: 0; display: inline-block; }
         .friend-row .fr-dot.on { background: #4caf50; box-shadow: 0 0 5px #4caf50; }
@@ -524,7 +553,13 @@
     <!-- MÀN HÌNH GAME -->
     <div id="screen-game" class="screen">
         <div class="game-layout">
-            
+
+            <!-- SẢNH CHÍNH — LỚP NHÂN VẬT NỀN, hiện phía sau chat/menu/orb, luôn có mặt ngay khi vào game -->
+            <div id="hub-stage">
+                <div id="hub-ground"></div>
+            </div>
+            <div id="hub-hint">Di chuyển: A/D hoặc ◀/▶ · Nhảy: Space hoặc W/▲</div>
+
             <!-- KÊNH CHAT — bên trái, dài -->
             <div class="chat-sidebar" id="chat-sidebar">
                 <div class="chat-sidebar-header">
@@ -562,26 +597,13 @@
                 </div>
             </div>
 
-            <!-- CỘT GIỮA — MENU CHÍNH (Chọn Game / Cài Đặt) HOẶC KHUNG GAME ĐANG CHƠI -->
+            <!-- CỘT GIỮA — CHỈ CÒN NÚT CÀI ĐẶT (nhân vật ở sảnh chính đã thay thế "Chọn Game") -->
             <div class="menu-center">
                 <div class="menu-vertical" id="menu-vertical">
-                    <div class="menu-item-v" id="menu-choose-game">
-                        <span class="menu-icon-v">🎮</span>
-                        <span class="menu-label-v">CHỌN GAME CHƠI</span>
-                    </div>
                     <div class="menu-item-v" id="menu-settings">
                         <span class="menu-icon-v">⚙️</span>
                         <span class="menu-label-v">CÀI ĐẶT</span>
                     </div>
-                </div>
-
-                <!-- Khung game nhúng (iframe) — hiện thay menu-vertical khi đã chọn 1 game -->
-                <div class="game-frame-wrap" id="game-frame-wrap">
-                    <div class="game-topbar">
-                        <button id="btn-exit-game">⬅ Về Sảnh Chính</button>
-                        <button class="gear-btn" id="btn-ingame-settings" title="Cài Đặt">⚙️</button>
-                    </div>
-                    <iframe id="game-iframe" src="" title="Game"></iframe>
                 </div>
             </div>
 
@@ -593,6 +615,38 @@
 
             <!-- CỘT PHẢI — MỖI MỤC LÀ 1 HÌNH TRÒN (orb), HOVER ĐỂ TRƯỢT BẢNG RA -->
             <div class="side-utils">
+
+                <!-- ORB: Bạn Bè -->
+                <div class="orb-wrap" data-orb>
+                    <div class="orb" id="orb-friends" title="Bạn bè">
+                        👥
+                        <span class="orb-badge" id="friends-badge">0</span>
+                    </div>
+                    <div class="orb-panel" id="friends-panel" style="width:280px;">
+                        <h4>👥 Bạn Bè</h4>
+                        <div class="friends-tabs">
+                            <div class="friends-tab active" data-ftab="list">Bạn bè</div>
+                            <div class="friends-tab" data-ftab="requests">Lời mời</div>
+                            <div class="friends-tab" data-ftab="online">Đang online</div>
+                            <div class="friends-tab" data-ftab="add">Kết bạn</div>
+                        </div>
+                        <div id="ftab-list"><div class="monitor-empty">Chưa có bạn bè nào.</div></div>
+                        <div id="ftab-requests" style="display:none;"><div class="monitor-empty">Không có lời mời nào.</div></div>
+                        <div id="ftab-online" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
+                        <div id="ftab-add" style="display:none;">
+                            <div class="form-group" style="margin-bottom:6px;">
+                                <label style="font-size:11px;">Xưng hô của người muốn kết bạn</label>
+                                <input type="text" id="fadd-nickname" placeholder="Xưng hô..." style="font-size:12px; padding:6px 8px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:6px;">
+                                <label style="font-size:11px;">Tên định danh của họ</label>
+                                <input type="text" id="fadd-fullname" placeholder="Tên định danh..." style="font-size:12px; padding:6px 8px;">
+                            </div>
+                            <button id="fadd-submit" class="btn-green" style="margin-top:2px;">Gửi Lời Mời Kết Bạn</button>
+                            <div class="modal-error" id="fadd-error" style="margin-top:8px;"></div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- ORB: Tiện Ích Nhanh -->
                 <div class="orb-wrap" data-orb>
@@ -677,37 +731,6 @@
                         <div id="ptab-online"><div class="monitor-empty">Đang tải...</div></div>
                         <div id="ptab-offline" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
                         <div id="ptab-all" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BẠN BÈ — CỘT PHẢI, dưới thanh orb -->
-            <div class="friends-sidebar" id="friends-sidebar">
-                <div class="friends-header" id="friends-header">
-                    <span class="ttl">👥 Bạn Bè</span>
-                    <span class="friends-badge" id="friends-badge">0</span>
-                </div>
-                <div class="friends-body">
-                    <div class="friends-tabs">
-                        <div class="friends-tab active" data-ftab="list">Bạn bè</div>
-                        <div class="friends-tab" data-ftab="requests">Lời mời</div>
-                        <div class="friends-tab" data-ftab="online">Đang online</div>
-                        <div class="friends-tab" data-ftab="add">Kết bạn</div>
-                    </div>
-                    <div id="ftab-list"><div class="monitor-empty">Chưa có bạn bè nào.</div></div>
-                    <div id="ftab-requests" style="display:none;"><div class="monitor-empty">Không có lời mời nào.</div></div>
-                    <div id="ftab-online" style="display:none;"><div class="monitor-empty">Đang tải...</div></div>
-                    <div id="ftab-add" style="display:none;">
-                        <div class="form-group" style="margin-bottom:6px;">
-                            <label style="font-size:11px;">Xưng hô của người muốn kết bạn</label>
-                            <input type="text" id="fadd-nickname" placeholder="Xưng hô..." style="font-size:12px; padding:6px 8px;">
-                        </div>
-                        <div class="form-group" style="margin-bottom:6px;">
-                            <label style="font-size:11px;">Tên định danh của họ</label>
-                            <input type="text" id="fadd-fullname" placeholder="Tên định danh..." style="font-size:12px; padding:6px 8px;">
-                        </div>
-                        <button id="fadd-submit" class="btn-green" style="margin-top:2px;">Gửi Lời Mời Kết Bạn</button>
-                        <div class="modal-error" id="fadd-error" style="margin-top:8px;"></div>
                     </div>
                 </div>
             </div>
@@ -816,15 +839,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- MODAL: CHỌN GAME CHƠI — danh sách game, mỗi game 1 file riêng load qua iframe -->
-<div class="modal-overlay" id="modal-game-select">
-    <div class="modal-box" style="max-width: 520px;">
-        <button class="settings-close-x" id="game-select-close">✕</button>
-        <h3 style="margin-bottom:14px;">🎮 Chọn Game Chơi</h3>
-        <div id="game-select-list" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 </div>
 
@@ -1549,10 +1563,6 @@
         hideModal('modal-decoy-login');
     });
 
-    document.getElementById('menu-choose-game').addEventListener('click', function() {
-        openGameSelect();
-    });
-
     // CÀI ĐẶT — mở modal kiểu sidebar trái + nội dung phải (Hồ Sơ Của Tôi / Phím Tắt / Bảng Xếp Hạng / Lịch Sử Trận)
     document.getElementById('menu-settings').addEventListener('click', function() {
         fillSettingsProfile();
@@ -1783,7 +1793,7 @@
                         roleBadgeHtml = ` <span class="chat-role-badge chat-role-lv${msg.senderRole.level}">Cấp ${msg.senderRole.level}</span>`;
                     }
                 }
-                let namePrefix = `<strong>${escapeHtml(msg.sender)}</strong>${roleBadgeHtml}:`;
+                let namePrefix = `<strong class="chat-sender-name" style="cursor:pointer;" data-nick="${escapeHtml(msg.sender)}">${escapeHtml(msg.sender)}</strong>${roleBadgeHtml}:`;
                 if (msg.type === 'image') {
                     div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
                 } else {
@@ -1797,6 +1807,21 @@
 
     document.getElementById('btn-send-chat').addEventListener('click', sendText);
     ui.chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendText(); });
+
+    // Bấm vào tên người gửi trong khung chat để xem Xưng hô + Tên định danh của họ
+    ui.chatBox.addEventListener('click', function (e) {
+        const nameEl = e.target.closest('.chat-sender-name');
+        if (!nameEl) return;
+        const nick = nameEl.getAttribute('data-nick');
+        if (!nick || typeof showProfileModal !== 'function') return;
+        window.FirebaseSync.lookupUsersByNickname(nick).then(function (matches) {
+            if (matches && matches.length) {
+                showProfileModal(matches[0].nickname, matches[0].fullname);
+            } else {
+                showProfileModal(nick, '(không tìm thấy hồ sơ)');
+            }
+        });
+    });
 
     function sendText() {
         let text = ui.chatInput.value.trim();
@@ -1907,58 +1932,235 @@
     });
 
     // ========================================================================
-    // MÀN CHỌN GAME — mỗi game là 1 file HTML riêng biệt, không phụ thuộc index.html.
-    // Danh sách game hiện có (thêm game mới chỉ cần thêm 1 dòng vào mảng này).
+    // NHÂN VẬT SẢNH CHÍNH (hub) — thay thế hoàn toàn "game Lobby riêng" trước đây. Xuất hiện ngay trên
+    // nền màn hình chính, phía sau chat/orb/bạn bè. Không cuộn camera — giới hạn trong khung nhìn hiện tại.
+    // Multiplayer thật: vị trí người khác đồng bộ qua MQTT (kênh riêng, không lưu lịch sử).
     // ========================================================================
-    const GAME_LIST = [
-        { id: 'lobby', name: '🏃 Sảnh Chờ (Lobby)', desc: 'Đi lại, nhảy parkour và gặp gỡ người chơi khác trong lúc chờ bạn bè.', file: 'games/lobby.html' }
-    ];
+    const HUB_TOPIC = 'game4nguoi_2026/hub_positions';
+    const HUB_GRAVITY = 0.62, HUB_JUMP = -13, HUB_SPEED = 3.6, HUB_FRICTION = 0.8;
+    const HUB_PLAYER_COLORS = ['#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#a663cc', '#06d6a0', '#ef476f'];
 
-    function openGameSelect() {
-        const listEl = document.getElementById('game-select-list');
-        listEl.innerHTML = '';
-        GAME_LIST.forEach(function (g) {
-            const row = document.createElement('div');
-            row.className = 'menu-item-v';
-            row.style.cssText = 'text-align:left; justify-content:flex-start; flex-direction:column; align-items:flex-start; gap:4px; cursor:pointer;';
-            row.innerHTML = `<span class="menu-label-v" style="font-size:14px;">${g.name}</span><span style="font-size:11px; color:#999; font-weight:normal;">${g.desc}</span>`;
-            row.addEventListener('click', function () { launchGame(g); });
-            listEl.appendChild(row);
+    let hubStageEl, hubGroundEl;
+    let hubMe = null;
+    const hubOthers = {}; // { username: { el, x, y, facing, lastSeen } }
+    let hubMqttClient = null;
+    let hubKeys = {};
+    let hubStarted = false;
+
+    function hubColorFor(name) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+        return HUB_PLAYER_COLORS[hash % HUB_PLAYER_COLORS.length];
+    }
+
+    function hubCreatePlayerEl(nickname, isMe) {
+        const el = document.createElement('div');
+        el.className = 'hub-player' + (isMe ? ' me' : '');
+        el.innerHTML = `
+            <div class="hub-player-name">${escapeHtml(nickname)}</div>
+            <div class="hub-player-shadow"></div>
+            <div class="hub-player-body" style="background:${hubColorFor(nickname)};"></div>
+            <div class="hub-player-head"></div>
+            <div class="hub-player-leg l"></div>
+            <div class="hub-player-leg r"></div>
+            <div class="hub-jump-dust"></div>`;
+        hubStageEl.appendChild(el);
+        return el;
+    }
+
+    // Trang trí nền: vài ngôi sao lấp lánh rải rác phía trên, vài cọng cỏ lay động dọc viền mặt đất
+    function hubDecorateStage() {
+        for (let i = 0; i < 25; i++) {
+            const star = document.createElement('div');
+            star.className = 'hub-star';
+            const size = 1 + Math.random() * 2;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = (Math.random() * 100) + '%';
+            star.style.top = (Math.random() * 55) + '%';
+            star.style.animationDelay = (Math.random() * 3) + 's';
+            hubStageEl.appendChild(star);
+        }
+        for (let i = 0; i < 40; i++) {
+            const blade = document.createElement('div');
+            blade.className = 'hub-grass-blade';
+            blade.style.left = (Math.random() * 100) + '%';
+            blade.style.animationDelay = (Math.random() * 2.6) + 's';
+            hubGroundEl.appendChild(blade);
+        }
+    }
+
+    function hubGroundTop() {
+        return hubStageEl.clientHeight - hubGroundEl.offsetHeight;
+    }
+
+    function hubSpawnPoint() {
+        const w = hubStageEl.clientWidth;
+        return { x: Math.max(20, w / 2 - 15), y: hubGroundTop() - 42 };
+    }
+
+    function hubRespawnMe() {
+        if (!hubMe) return;
+        const sp = hubSpawnPoint();
+        hubMe.x = sp.x; hubMe.y = sp.y; hubMe.vx = 0; hubMe.vy = 0;
+    }
+
+    function hubRenderPlayer(p) {
+        p.el.style.left = p.x + 'px';
+        p.el.style.top = p.y + 'px';
+        p.el.style.transform = 'scaleX(' + (p.facing >= 0 ? 1 : -1) + ')';
+    }
+
+    function hubInit() {
+        if (hubStarted || !currentUser) return;
+        hubStarted = true;
+
+        hubStageEl = document.getElementById('hub-stage');
+        hubGroundEl = document.getElementById('hub-ground');
+
+        const sp = hubSpawnPoint();
+        hubMe = { x: sp.x, y: sp.y, vx: 0, vy: 0, onGround: false, facing: 1, el: hubCreatePlayerEl(currentUser.nickname, true) };
+
+        // Bàn phím: A/D hoặc mũi tên trái-phải để đi, Space/W/mũi tên lên để nhảy.
+        // Không kích hoạt khi đang gõ trong 1 ô input/textarea (để không phá gõ chat).
+        window.addEventListener('keydown', function (e) {
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+            hubKeys[e.code] = true;
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
         });
-        showModal('modal-game-select');
-    }
-    document.getElementById('game-select-close').addEventListener('click', function () { hideModal('modal-game-select'); });
+        window.addEventListener('keyup', function (e) { hubKeys[e.code] = false; });
 
-    function launchGame(game) {
-        hideModal('modal-game-select');
-        // Nhúng game bằng iframe NGAY TRONG trang hub — giữ nguyên khung chat trái, thanh orb phải,
-        // Bạn Bè, bảng thông báo. Chỉ phần khu vực giữa (menu 2 nút) được thay bằng khung game.
-        const params = new URLSearchParams({
-            nickname: currentUser.nickname,
-            username: currentUser.username
+        // Click vào chính nhân vật của mình để thấy gợi ý điều khiển (đã luôn điều khiển được sẵn,
+        // đây chỉ là phản hồi hình ảnh cho biết "đây là bạn")
+        hubMe.el.style.cursor = 'pointer';
+        hubMe.el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const hint = document.getElementById('hub-hint');
+            hint.classList.add('show');
+            clearTimeout(hubMe._hintTimer);
+            hubMe._hintTimer = setTimeout(function () { hint.classList.remove('show'); }, 2500);
         });
-        document.getElementById('game-iframe').src = game.file + '?' + params.toString();
-        document.getElementById('menu-vertical').style.display = 'none';
-        document.getElementById('game-frame-wrap').classList.add('active');
+
+        window.addEventListener('resize', function () {
+            // Giữ nhân vật trong khung nhìn mới nếu bị co lại
+            const w = hubStageEl.clientWidth, gTop = hubGroundTop();
+            hubMe.x = Math.max(0, Math.min(w - 30, hubMe.x));
+            if (hubMe.y > gTop - 42) hubMe.y = gTop - 42;
+        });
+
+        hubDecorateStage();
+        hubConnectMqtt();
+        requestAnimationFrame(hubPhysicsStep);
     }
 
-    function exitGame() {
-        document.getElementById('game-frame-wrap').classList.remove('active');
-        document.getElementById('menu-vertical').style.display = '';
-        document.getElementById('game-iframe').src = ''; // ngắt kết nối MQTT của game khi thoát
+    function hubIsDown(codes) { return codes.some(c => hubKeys[c]); }
+
+    function hubPhysicsStep() {
+        if (!hubMe) { requestAnimationFrame(hubPhysicsStep); return; }
+
+        const w = hubStageEl.clientWidth;
+        const groundTop = hubGroundTop();
+        let moving = false;
+
+        if (hubIsDown(['KeyA', 'ArrowLeft'])) { hubMe.vx -= 0.85; hubMe.facing = -1; moving = true; }
+        if (hubIsDown(['KeyD', 'ArrowRight'])) { hubMe.vx += 0.85; hubMe.facing = 1; moving = true; }
+        if (hubIsDown(['KeyW', 'ArrowUp', 'Space']) && hubMe.onGround) {
+            hubMe.vy = HUB_JUMP; hubMe.onGround = false;
+            const dust = hubMe.el.querySelector('.hub-jump-dust');
+            dust.classList.remove('show'); void dust.offsetWidth; dust.classList.add('show');
+        }
+        hubMe.el.classList.toggle('walking', moving && hubMe.onGround);
+        hubMe.el.classList.toggle('airborne', !hubMe.onGround);
+
+        hubMe.vx = Math.max(-HUB_SPEED, Math.min(HUB_SPEED, hubMe.vx));
+        hubMe.vx *= HUB_FRICTION;
+        hubMe.vy += HUB_GRAVITY;
+        if (hubMe.vy > 20) hubMe.vy = 20;
+
+        let nextX = hubMe.x + hubMe.vx;
+        let nextY = hubMe.y + hubMe.vy;
+
+        // Giới hạn trong đúng khung nhìn hiện tại — không cuộn camera, không world rộng hơn màn hình
+        nextX = Math.max(0, Math.min(w - 30, nextX));
+        if (nextY + 42 >= groundTop) { nextY = groundTop - 42; hubMe.vy = 0; hubMe.onGround = true; }
+        else { hubMe.onGround = false; }
+
+        hubMe.x = nextX; hubMe.y = nextY;
+        hubRenderPlayer(hubMe);
+        hubBroadcastPosition();
+        requestAnimationFrame(hubPhysicsStep);
     }
-    document.getElementById('btn-exit-game').addEventListener('click', exitGame);
-    document.getElementById('btn-ingame-settings').addEventListener('click', function () {
-        fillSettingsProfile();
-        showModal('modal-settings');
-    });
+
+    function hubConnectMqtt() {
+        const clientId = 'hub_' + Math.random().toString(16).substring(2, 10);
+        hubMqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: clientId, keepalive: 30 });
+
+        hubMqttClient.on('connect', function () { hubMqttClient.subscribe(HUB_TOPIC); });
+
+        hubMqttClient.on('message', function (topic, message) {
+            try {
+                const data = JSON.parse(message.toString());
+                if (data.username === currentUser.username) return;
+                hubHandleRemoteUpdate(data);
+            } catch (e) { /* bỏ qua gói lỗi định dạng */ }
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (hubMqttClient && hubMqttClient.connected) {
+                hubMqttClient.publish(HUB_TOPIC, JSON.stringify({ type: 'leave', username: currentUser.username }));
+            }
+        });
+    }
+
+    function hubHandleRemoteUpdate(data) {
+        if (data.type === 'leave') {
+            if (hubOthers[data.username]) {
+                hubOthers[data.username].el.remove();
+                delete hubOthers[data.username];
+            }
+            return;
+        }
+        let entry = hubOthers[data.username];
+        if (!entry) {
+            entry = { el: hubCreatePlayerEl(data.nickname, false), x: data.x, y: data.y, facing: 1 };
+            hubOthers[data.username] = entry;
+        }
+        entry.x = data.x; entry.y = data.y; entry.facing = data.facing;
+        entry.lastSeen = Date.now();
+        entry.el.classList.toggle('walking', !!data.moving);
+        hubRenderPlayer(entry);
+    }
+
+    let hubLastBroadcast = 0;
+    function hubBroadcastPosition() {
+        const now = Date.now();
+        if (now - hubLastBroadcast < 70 || !hubMqttClient || !hubMqttClient.connected) return;
+        hubLastBroadcast = now;
+        hubMqttClient.publish(HUB_TOPIC, JSON.stringify({
+            type: 'pos', username: currentUser.username, nickname: currentUser.nickname,
+            x: Math.round(hubMe.x), y: Math.round(hubMe.y), facing: hubMe.facing,
+            moving: Math.abs(hubMe.vx) > 0.3 && hubMe.onGround
+        }));
+    }
+
+    // Dọn người chơi không còn hoạt động (không nhận update > 8s -> coi như đã rời)
+    setInterval(function () {
+        const now = Date.now();
+        Object.keys(hubOthers).forEach(function (u) {
+            if (now - (hubOthers[u].lastSeen || 0) > 8000) {
+                hubOthers[u].el.remove();
+                delete hubOthers[u];
+            }
+        });
+    }, 4000);
 
     // ========================================================================
     // HỆ THỐNG BẠN BÈ
     // ========================================================================
     const friendsUI = {
-        sidebar: document.getElementById('friends-sidebar'),
-        header: document.getElementById('friends-header'),
+        wrap: document.getElementById('orb-friends').closest('.orb-wrap'),
+        orb: document.getElementById('orb-friends'),
         badge: document.getElementById('friends-badge'),
         tabs: document.querySelectorAll('.friends-tab'),
         listBox: document.getElementById('ftab-list'),
@@ -1967,10 +2169,15 @@
         addBox: document.getElementById('ftab-add')
     };
     let pendingFriendRequests = [];
+    let friendsPanelLoaded = false;
 
-    friendsUI.header.addEventListener('click', function () {
-        friendsUI.sidebar.classList.toggle('open');
-        if (friendsUI.sidebar.classList.contains('open')) refreshFriendsAll();
+    // Orb Bạn Bè dùng chung cơ chế hover/click mở panel như mọi orb khác (đã gắn ở khối "ORB PANELS" phía
+    // trên); ở đây chỉ cần tự tải dữ liệu lần đầu khi panel được mở.
+    friendsUI.orb.addEventListener('click', function () {
+        if (!friendsPanelLoaded) { friendsPanelLoaded = true; refreshFriendsAll(); }
+    });
+    friendsUI.wrap.addEventListener('mouseenter', function () {
+        if (!friendsPanelLoaded) { friendsPanelLoaded = true; refreshFriendsAll(); }
     });
 
     friendsUI.tabs.forEach(function (tab) {
@@ -2120,6 +2327,13 @@
         }
     });
 
+    function showProfileModal(nickname, fullname) {
+        document.getElementById('vp-nickname').innerText = nickname || '(không rõ)';
+        document.getElementById('vp-fullname').innerText = fullname || '(không rõ)';
+        showModal('modal-view-profile');
+    }
+    document.getElementById('vp-close').addEventListener('click', function () { hideModal('modal-view-profile'); });
+
     function loadPlayerlistTab(key) {
         const container = document.getElementById('ptab-' + key);
         container.innerHTML = '<div class="monitor-empty">Đang tải...</div>';
@@ -2131,7 +2345,9 @@
                 users.forEach(function (u) {
                     const row = document.createElement('div');
                     row.className = 'player-row';
+                    row.style.cursor = 'pointer';
                     row.innerHTML = `<span><span class="pr-dot on"></span>${escapeHtml(u.nickname)}</span>`;
+                    row.addEventListener('click', function () { showProfileModal(u.nickname, u.fullname); });
                     container.appendChild(row);
                 });
             });
@@ -2143,7 +2359,9 @@
                 users.forEach(function (u) {
                     const row = document.createElement('div');
                     row.className = 'player-row';
+                    row.style.cursor = 'pointer';
                     row.innerHTML = `<span><span class="pr-dot"></span>${escapeHtml(u.nickname)}</span>`;
+                    row.addEventListener('click', function () { showProfileModal(u.nickname, u.fullname); });
                     container.appendChild(row);
                 });
             });
@@ -2157,8 +2375,9 @@
                     row.className = 'player-row';
                     const statusLabel = u.deleted ? ' (đã xoá)' : (u.online ? '' : ' (offline)');
                     row.innerHTML = `
-                        <span><span class="pr-dot ${u.online && !u.deleted ? 'on' : ''}"></span>${escapeHtml(u.nickname)}${statusLabel}</span>
+                        <span class="pr-name-click" style="cursor:pointer;"><span class="pr-dot ${u.online && !u.deleted ? 'on' : ''}"></span>${escapeHtml(u.nickname)}${statusLabel}</span>
                         <div class="pr-actions"></div>`;
+                    row.querySelector('.pr-name-click').addEventListener('click', function () { showProfileModal(u.nickname, u.fullname); });
                     const actions = row.querySelector('.pr-actions');
                     if (u.username === currentUser.username) {
                         // không cho Admin tự xoá chính tài khoản mình đang dùng qua bảng này
@@ -2294,16 +2513,15 @@
         if (e.code === keybinds.toggleChat) {
             document.getElementById('btn-collapse-chat').click();
         } else if (e.code === keybinds.toggleFriends) {
-            friendsUI.sidebar.classList.toggle('open');
-            if (friendsUI.sidebar.classList.contains('open')) refreshFriendsAll();
+            friendsUI.wrap.classList.toggle('panel-open');
+            if (friendsUI.wrap.classList.contains('panel-open')) {
+                if (!friendsPanelLoaded) { friendsPanelLoaded = true; refreshFriendsAll(); }
+            }
         } else if (e.code === keybinds.openSettings) {
             fillSettingsProfile(); showModal('modal-settings');
         } else if (e.code === keybinds.respawn) {
-            // Gửi lệnh "Về Spawn" vào iframe game đang mở (nếu có) qua postMessage
-            const gameFrame = document.getElementById('game-iframe');
-            if (gameFrame && gameFrame.contentWindow) {
-                gameFrame.contentWindow.postMessage({ type: 'game4nguoi:respawn' }, '*');
-            }
+            // Đưa nhân vật của mình về đúng vị trí xuất hiện ban đầu ở sảnh chính
+            if (typeof hubRespawnMe === 'function') hubRespawnMe();
         }
     });
 
@@ -2315,6 +2533,7 @@
             pendingFriendRequests = requests;
             renderFriendRequests();
         });
+        hubInit(); // khởi động nhân vật sảnh chính ngay khi đăng nhập xong
     };
 </script>
 
