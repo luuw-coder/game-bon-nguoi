@@ -13,14 +13,6 @@
       "$sessionId": {
         ".validate": "newData.isBoolean()"
       }
-    },
-    "friends": {
-      ".read": true,
-      ".write": true
-    },
-    "friendRequests": {
-      ".read": true,
-      ".write": true
     }
   }
 }
