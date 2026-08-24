@@ -82,8 +82,10 @@
 
         /* CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC, KIỂU THANH MENU CHÍNH MINECRAFT */
         .menu-center { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-width: 0; align-self: stretch; padding: 22px 16px 0; position: relative; z-index: 4; pointer-events: none; }
-        .menu-center .menu-vertical { pointer-events: auto; max-width: 220px; }
-        .menu-center .menu-item-v { padding: 12px 18px; }
+        .menu-center .menu-vertical { pointer-events: auto; max-width: 460px; flex-direction: row; gap: 12px; }
+        .menu-center .menu-item-v { padding: 12px 20px; flex: 1; }
+        .menu-center .menu-item-v:hover { transform: translateY(-3px); }
+        .menu-center .menu-item-v:active { transform: translateY(-1px) scale(0.97); }
 
         .menu-vertical { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 380px; }
         .menu-item-v {
@@ -597,9 +599,13 @@
                 </div>
             </div>
 
-            <!-- CỘT GIỮA — CHỈ CÒN NÚT CÀI ĐẶT (nhân vật ở sảnh chính đã thay thế "Chọn Game") -->
+            <!-- CỘT GIỮA — Chọn Game Chơi + Cài Đặt, xếp ngang để chừa chỗ cho nhân vật ở sảnh chính -->
             <div class="menu-center">
                 <div class="menu-vertical" id="menu-vertical">
+                    <div class="menu-item-v" id="menu-choose-game">
+                        <span class="menu-icon-v">🎮</span>
+                        <span class="menu-label-v">CHỌN GAME CHƠI</span>
+                    </div>
                     <div class="menu-item-v" id="menu-settings">
                         <span class="menu-icon-v">⚙️</span>
                         <span class="menu-label-v">CÀI ĐẶT</span>
@@ -839,6 +845,15 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- MODAL: CHỌN GAME CHƠI — danh sách các game đã thêm; trống nếu chưa có game nào -->
+<div class="modal-overlay" id="modal-game-select">
+    <div class="modal-box" style="max-width: 480px;">
+        <button class="settings-close-x" id="game-select-close">✕</button>
+        <h3 style="margin-bottom:14px;">🎮 Chọn Game Chơi</h3>
+        <div id="game-select-list" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 </div>
 
@@ -1563,6 +1578,36 @@
         hideModal('modal-decoy-login');
     });
 
+    // ========================================================================
+    // CHỌN GAME CHƠI — danh sách game riêng biệt (mỗi game 1 file .html độc lập sau này sẽ thêm vào
+    // mảng GAME_LIST bên dưới). Hiện tại chưa có game nào -> hiện khu vực trống, không báo lỗi.
+    // ========================================================================
+    const GAME_LIST = [
+        // Ví dụ khi có game thật: { name: '🏃 Parkour Sảnh Chờ', desc: 'Mô tả ngắn về game...', file: 'games/parkour.html' }
+    ];
+
+    document.getElementById('menu-choose-game').addEventListener('click', function() {
+        const listEl = document.getElementById('game-select-list');
+        if (GAME_LIST.length === 0) {
+            listEl.innerHTML = '<div class="monitor-empty" style="text-align:center; padding:24px 0; font-size:13px;">🚧 Chưa có game nào được thêm vào. Hãy quay lại sau nhé!</div>';
+        } else {
+            listEl.innerHTML = '';
+            GAME_LIST.forEach(function (g) {
+                const row = document.createElement('div');
+                row.className = 'menu-item-v';
+                row.style.cssText = 'text-align:left; justify-content:flex-start; flex-direction:column; align-items:flex-start; gap:4px; cursor:pointer; padding:14px 16px;';
+                row.innerHTML = `<span class="menu-label-v" style="font-size:14px;">${g.name}</span><span style="font-size:11px; color:#999; font-weight:normal;">${g.desc}</span>`;
+                row.addEventListener('click', function () {
+                    hideModal('modal-game-select');
+                    window.open(g.file + '?nickname=' + encodeURIComponent(currentUser.nickname) + '&username=' + encodeURIComponent(currentUser.username), '_blank');
+                });
+                listEl.appendChild(row);
+            });
+        }
+        showModal('modal-game-select');
+    });
+    document.getElementById('game-select-close').addEventListener('click', function () { hideModal('modal-game-select'); });
+
     // CÀI ĐẶT — mở modal kiểu sidebar trái + nội dung phải (Hồ Sơ Của Tôi / Phím Tắt / Bảng Xếp Hạng / Lịch Sử Trận)
     document.getElementById('menu-settings').addEventListener('click', function() {
         fillSettingsProfile();
@@ -2208,6 +2253,8 @@
                 row.addEventListener('click', function () { openFriendChat(f); });
                 friendsUI.listBox.appendChild(row);
             });
+        }).catch(function (err) {
+            friendsUI.listBox.innerHTML = `<div class="monitor-empty">❌ Lỗi tải danh sách: ${escapeHtml(err.message || 'không xác định')}</div>`;
         });
     }
 
@@ -2231,10 +2278,16 @@
                     <button class="tool-btn" style="background:#442222; color:#ff8a80;" data-act="decline">✖</button>
                 </div>`;
             row.querySelector('[data-act="accept"]').addEventListener('click', function () {
-                window.FirebaseSync.acceptFriendRequest(currentUser.username, r.fromUsername).then(function () { refreshFriendsAll(); });
+                window.FirebaseSync.acceptFriendRequest(currentUser.username, r.fromUsername).then(function () {
+                    refreshFriendsAll();
+                }).catch(function (err) {
+                    alert('❌ Không chấp nhận được: ' + (err.message || 'lỗi không xác định'));
+                });
             });
             row.querySelector('[data-act="decline"]').addEventListener('click', function () {
-                window.FirebaseSync.declineFriendRequest(currentUser.username, r.fromUsername);
+                window.FirebaseSync.declineFriendRequest(currentUser.username, r.fromUsername).catch(function (err) {
+                    alert('❌ Không từ chối được: ' + (err.message || 'lỗi không xác định'));
+                });
             });
             friendsUI.reqBox.appendChild(row);
         });
@@ -2290,6 +2343,11 @@
                 document.getElementById('fadd-nickname').value = '';
                 document.getElementById('fadd-fullname').value = '';
             }
+        }).catch(function (err) {
+            // Thường gặp nhất: Firebase Rules chưa cho phép ghi vào "friendRequests" (permission denied) —
+            // hiện rõ lỗi ra để dễ nhận biết thay vì im lặng thất bại.
+            errBox.innerText = '❌ Không gửi được: ' + (err && err.message ? err.message : 'lỗi không xác định') + '. Kiểm tra lại Firebase Rules đã publish đủ node "friendRequests" chưa.';
+            errBox.classList.add('active');
         });
     });
 
@@ -2418,7 +2476,7 @@
 
         const popup = document.createElement('div');
         popup.className = 'friend-chat-popup open';
-        popup.style.right = (330 + idx * 275) + 'px';
+        popup.style.right = (100 + idx * 275) + 'px';
         popup.innerHTML = `
             <div class="fcp-header"><span>💬 ${escapeHtml(friend.nickname)}</span><span class="fcp-close">✖</span></div>
             <div class="fcp-box"></div>
