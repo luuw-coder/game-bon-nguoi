@@ -41,6 +41,19 @@
     let db = null;
     let _initError = null;
 
+    // ========================================================================
+    // I-B. HASH MẬT KHẨU (SHA-256 qua Web Crypto API có sẵn trên trình duyệt) —
+    // KHÔNG BAO GIỜ lưu mật khẩu gốc (plain text) lên Firebase nữa. Kể cả ai đó
+    // đọc được node "users" (do Rules mở hoặc bug), họ cũng chỉ thấy chuỗi hash,
+    // không suy ngược ra được mật khẩu thật.
+    // ========================================================================
+    async function hashPassword(plainPassword) {
+        const enc = new TextEncoder().encode(String(plainPassword));
+        const hashBuffer = await crypto.subtle.digest('SHA-256', enc);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
     try {
         if (typeof firebase === 'undefined') {
             throw new Error('Chưa nạp Firebase SDK (thiếu <script> firebase-app / firebase-database trước firebaseSync.js)');
@@ -216,6 +229,7 @@
         login: function (username, password, fullname, nickname) {
             if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
 
+            return hashPassword(password).then(function (passwordHash) {
             return REF_USER(username).once('value').then(function (snapshot) {
                 if (!snapshot.exists()) {
                     // Tài khoản chưa tồn tại -> tạo mới
@@ -224,7 +238,7 @@
                     // thang điểm đó; quyền của Admin được kiểm tra qua isRootAdmin riêng.
                     const isRoot = (username === ROOT_ADMIN_USERNAME);
                     const newUser = {
-                        password: password,
+                        password: passwordHash,
                         fullname: fullname,
                         nickname: nickname,
                         level: 1,
@@ -244,7 +258,7 @@
                     return { status: 'account_deleted' };
                 }
 
-                if (userData.password !== password) {
+                if (userData.password !== passwordHash) {
                     return { status: 'wrong_password' };
                 }
 
@@ -278,6 +292,7 @@
                 }).then(function () {
                     return { status: 'ok', user: userData };
                 });
+            });
             });
         },
 
@@ -338,7 +353,16 @@
             _watchForKick(_currentSessionId);
             _watchOwnPermissions(username);
 
-            return REF_USER(username).child('activeSession').set(sessionInfo);
+            const sessionRef = REF_USER(username).child('activeSession');
+
+            // QUAN TRỌNG: onDisconnect() được Firebase SERVER tự thực hiện ngay khi phát hiện mất kết nối
+            // thật sự (đóng tab, tắt trình duyệt, rớt mạng, sập máy) — khác với 'beforeunload' ở phía
+            // client vốn không chạy kịp trong nhiều trường hợp (crash, mất mạng đột ngột, tắt máy).
+            // Nhờ vậy "online" trong danh sách bạn bè phản ánh đúng người ĐANG THỰC SỰ có kết nối, không
+            // còn kẹt ở trạng thái online giả sau khi ai đó đã rời từ lâu.
+            sessionRef.onDisconnect().remove();
+
+            return sessionRef.set(sessionInfo);
         },
 
         /**
@@ -348,24 +372,27 @@
         changePassword: function (username, oldPassword, newPassword, fullname, nickname) {
             if (!db) return Promise.reject(_initError || new Error('Firebase chưa sẵn sàng'));
 
-            return REF_USER(username).once('value').then(function (snapshot) {
-                if (!snapshot.exists()) return { status: 'not_found' };
-                const userData = snapshot.val();
+            return Promise.all([hashPassword(oldPassword), hashPassword(newPassword)]).then(function (hashes) {
+                const oldHash = hashes[0], newHash = hashes[1];
+                return REF_USER(username).once('value').then(function (snapshot) {
+                    if (!snapshot.exists()) return { status: 'not_found' };
+                    const userData = snapshot.val();
 
-                if (userData.password !== oldPassword) {
-                    return { status: 'wrong_password' };
-                }
-
-                const oldSessionId = userData.activeSession ? userData.activeSession.sessionId : null;
-
-                return REF_USER(username).update({ password: newPassword }).then(function () {
-                    return window.FirebaseSync._claimSession(username, userData);
-                }).then(function () {
-                    if (oldSessionId) {
-                        return REF_KICKS(oldSessionId).set(true);
+                    if (userData.password !== oldHash) {
+                        return { status: 'wrong_password' };
                     }
-                }).then(function () {
-                    return { status: 'ok' };
+
+                    const oldSessionId = userData.activeSession ? userData.activeSession.sessionId : null;
+
+                    return REF_USER(username).update({ password: newHash }).then(function () {
+                        return window.FirebaseSync._claimSession(username, userData);
+                    }).then(function () {
+                        if (oldSessionId) {
+                            return REF_KICKS(oldSessionId).set(true);
+                        }
+                    }).then(function () {
+                        return { status: 'ok' };
+                    });
                 });
             });
         },
@@ -377,6 +404,11 @@
             _stopWatchingKick();
             _stopWatchingPermissions();
             if (!db || !username) return Promise.resolve();
+
+            // Hủy lệnh onDisconnect().remove() đã đăng ký lúc đăng nhập — vì giờ ta TỰ xoá session
+            // ngay bên dưới; nếu không hủy, lệnh cũ có thể trồi lên xoá nhầm session mới (của người
+            // vừa đăng nhập lại) khi kết nối mạng cũ mới thật sự ngắt muộn hơn.
+            REF_USER(username).child('activeSession').onDisconnect().cancel();
 
             return REF_USER(username).once('value').then(function (snapshot) {
                 const userData = snapshot.val();
