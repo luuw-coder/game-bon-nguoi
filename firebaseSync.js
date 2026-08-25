@@ -29,7 +29,7 @@
     // I. CẤU HÌNH FIREBASE — DÁN CONFIG CỦA BẠN VÀO ĐÂY
     // ========================================================================
     const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyD36u8TkGhbtqFeJGs16xrOyQRubF994-c",
+        apiKey: "AIzaSyAgmBKH0K3esCQC5H4lxRHy2kGW2lkczsE",
         authDomain: "game4nguoi-742cb.firebaseapp.com",
         databaseURL: "https://game4nguoi-742cb-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "game4nguoi-742cb",
