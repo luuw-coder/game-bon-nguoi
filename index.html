@@ -82,6 +82,10 @@
         .emoji-item { cursor: pointer; font-size: 18px; transition: 0.2s; }
         .emoji-item:hover { transform: scale(1.3); }
 
+        /* Nút giữ-để-nói (🎤) khi đang ghi âm — đỏ và nhấp nháy để người dùng biết đang ghi */
+        .tool-btn.recording { background: #f44336; color: #fff; animation: voiceRecordPulse 1s infinite; user-select: none; }
+        @keyframes voiceRecordPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(244,67,54,0.5); } 50% { box-shadow: 0 0 0 8px rgba(244,67,54,0); } }
+
         /* CỘT GIỮA — 3 NÚT MENU CHÍNH XẾP DỌC, KIỂU THANH MENU CHÍNH MINECRAFT */
         .menu-center { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-width: 0; align-self: stretch; padding: 22px 16px 0; position: relative; z-index: 4; pointer-events: none; }
         .menu-center .menu-vertical { pointer-events: auto; max-width: 460px; flex-direction: row; gap: 12px; }
@@ -252,6 +256,16 @@
         .orb-panel.flip-bottom { top: auto; bottom: 10px; transform-origin: bottom right; }
         .orb-wrap.panel-pinned .orb-panel { position: fixed; top: 10px; bottom: 10px; right: 76px; transform: none !important; max-height: calc(100vh - 20px); }
 
+        /* KÉO-THẢ PANEL: khi người dùng bấm giữ viền/tiêu đề rồi kéo, panel chuyển hẳn sang toạ độ
+           tự do (position:fixed, left/top do JS gán) và không còn tự đóng theo hover nữa. */
+        .orb-panel.draggable-active {
+            position: fixed !important; transform: none !important; opacity: 1 !important; pointer-events: auto !important;
+            max-height: 70vh; right: auto;
+        }
+        .orb-panel .panel-drag-handle { cursor: grab; user-select: none; }
+        .orb-panel .panel-drag-handle:active { cursor: grabbing; }
+        .orb-panel.being-dragged { transition: none !important; opacity: 0.92 !important; box-shadow: 0 16px 40px rgba(0,0,0,0.7); }
+
         .orb-panel h4 { color: #4fc3f7; font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
 
         .user-card { background: #1a1a1a; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #4caf50; }
@@ -421,12 +435,19 @@
             display: none; flex-direction: column; padding: 8px; z-index: 490;
         }
         .friend-chat-popup.open { display: flex; }
-        .friend-chat-popup .fcp-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: #ff9800; margin-bottom: 6px; }
+        .friend-chat-popup .fcp-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: #ff9800; margin-bottom: 6px; cursor: grab; user-select: none; }
+        .friend-chat-popup .fcp-header:active { cursor: grabbing; }
         .friend-chat-popup .fcp-close { cursor: pointer; color: #888; }
         .friend-chat-popup .fcp-close:hover { color: #fff; }
         .friend-chat-popup .fcp-box { flex: 1; background: rgba(17,17,17,0.6); border-radius: 6px; padding: 6px; overflow-y: auto; font-size: 11px; margin-bottom: 6px; }
-        .friend-chat-popup .fcp-controls { display: flex; gap: 5px; }
-        .friend-chat-popup .fcp-controls input { flex: 1; padding: 5px 7px; font-size: 11px; }
+        .friend-chat-popup .fcp-box .chat-img { max-width: 140px; }
+        .friend-chat-popup .fcp-controls { display: flex; gap: 5px; align-items: center; }
+        .friend-chat-popup .fcp-controls input[type="text"] { flex: 1; padding: 5px 7px; font-size: 11px; }
+        .friend-chat-popup .fcp-controls .tool-btn { padding: 5px 8px; font-size: 12px; }
+        .friend-chat-popup .fcp-emoji-picker { display: none; position: absolute; bottom: 44px; background: #222; padding: 6px; border-radius: 8px; border: 1px solid #444; width: 180px; flex-wrap: wrap; gap: 4px; z-index: 10; }
+        .friend-chat-popup .fcp-emoji-picker.active { display: flex; }
+        .friend-chat-popup .fcp-emoji-picker span { cursor: pointer; font-size: 16px; }
+        .friend-chat-popup .fcp-emoji-picker span:hover { transform: scale(1.25); }
     </style>
 </head>
 <body>
@@ -606,6 +627,7 @@
                 <div class="chat-controls">
                     <button class="tool-btn" id="btn-toggle-emoji">😀</button>
                     <button class="tool-btn" id="btn-upload-image" title="Gửi ảnh">📷</button>
+                    <button class="tool-btn" id="btn-voice-chat" title="Giữ để nói">🎤</button>
                     <input type="file" id="file-input" accept="image/*" style="display: none;">
                     
                     <div class="emoji-picker" id="emoji-picker">
@@ -1908,6 +1930,8 @@
                 let namePrefix = `<strong class="chat-sender-name" style="cursor:pointer;" data-nick="${escapeHtml(msg.sender)}">${escapeHtml(msg.sender)}</strong>${roleBadgeHtml}:`;
                 if (msg.type === 'image') {
                     div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
+                } else if (msg.type === 'voice') {
+                    div.innerHTML = `${namePrefix} 🎤 <audio controls src="${msg.text}" style="height:28px; max-width:200px; vertical-align:middle;"></audio>`;
                 } else {
                     div.innerHTML = `${namePrefix} ${escapeHtml(msg.text)}`;
                 }
@@ -1953,6 +1977,90 @@
         return { level: userPermissions.level || 1, isRootAdmin: !!userPermissions.isRootAdmin };
     }
 
+    // ========================================================================
+    // CHAT GIỌNG NÓI — bấm GIỮ nút 🎤 để ghi âm, THẢ ra để gửi ngay (kiểu voice message
+    // của Messenger/Zalo/WeChat). Vì hệ thống không có backend lưu file, đoạn ghi âm được
+    // mã hoá base64 rồi gửi thẳng qua MQTT như ảnh — GIỚI HẠN TỐI ĐA 20 GIÂY để tránh tin
+    // nhắn quá nặng làm treo hoặc bị MQTT từ chối.
+    // ========================================================================
+    const VOICE_MAX_SECONDS = 20;
+
+    function setupVoiceRecordButton(btnEl, targetTopicOrGetter) {
+        if (!btnEl) return;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordStream = null;
+        let maxTimer = null;
+        let isRecording = false;
+        let cancelled = false;
+
+        function getTopic() {
+            return (typeof targetTopicOrGetter === 'function') ? targetTopicOrGetter() : targetTopicOrGetter;
+        }
+
+        function startRecording(e) {
+            if (e) e.preventDefault();
+            if (isRecording) return;
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('⚠️ Trình duyệt này không hỗ trợ ghi âm (cần HTTPS + trình duyệt hiện đại).');
+                return;
+            }
+            cancelled = false;
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+                recordStream = stream;
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = function (ev) { if (ev.data.size > 0) audioChunks.push(ev.data); };
+                mediaRecorder.onstop = function () {
+                    recordStream.getTracks().forEach(function (t) { t.stop(); });
+                    clearTimeout(maxTimer);
+                    btnEl.classList.remove('recording');
+                    isRecording = false;
+                    if (cancelled || audioChunks.length === 0) return;
+
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = function () {
+                        const topic = getTopic();
+                        if (topic) {
+                            window.NetworkManager.sendChat(topic, currentUser.nickname, reader.result, 'voice', getMySenderRole());
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                btnEl.classList.add('recording');
+                maxTimer = setTimeout(function () { if (isRecording) stopRecording(); }, VOICE_MAX_SECONDS * 1000);
+            }).catch(function (err) {
+                console.error('Không thể truy cập micro:', err);
+                alert('⚠️ Không thể truy cập micro. Hãy kiểm tra quyền micro của trình duyệt cho trang web này.');
+            });
+        }
+
+        function stopRecording(e) {
+            if (e) e.preventDefault();
+            if (!isRecording || !mediaRecorder) return;
+            mediaRecorder.stop();
+        }
+
+        function cancelRecording() {
+            if (!isRecording) return;
+            cancelled = true;
+            stopRecording();
+        }
+
+        // Chuột: giữ để ghi, thả để gửi. Rời khỏi nút trong lúc giữ chuột -> huỷ (không gửi).
+        btnEl.addEventListener('mousedown', startRecording);
+        window.addEventListener('mouseup', function () { if (isRecording) stopRecording(); });
+        btnEl.addEventListener('mouseleave', function (e) { if (isRecording && e.buttons !== 1) cancelRecording(); });
+
+        // Cảm ứng (điện thoại/máy tính bảng): chạm giữ để ghi, nhấc tay để gửi.
+        btnEl.addEventListener('touchstart', startRecording, { passive: false });
+        btnEl.addEventListener('touchend', stopRecording);
+        btnEl.addEventListener('touchcancel', cancelRecording);
+    }
+
     // EMOJI VÀ UP ẢNH
     document.getElementById('btn-toggle-emoji').addEventListener('click', () => {
         document.getElementById('emoji-picker').classList.toggle('active');
@@ -1971,6 +2079,10 @@
         if (e.target.files.length > 0) processAndSendImage(e.target.files[0]);
     });
 
+    // Nút 🎤 giữ-để-nói của khung chat chính: gửi vào ĐÚNG tab đang mở tại thời điểm thả tay
+    // (dùng hàm getter thay vì giá trị cố định, vì currentTopic có thể đổi trong lúc đang ghi âm).
+    setupVoiceRecordButton(document.getElementById('btn-voice-chat'), function () { return currentTopic; });
+
     ui.chatInput.addEventListener('paste', function(e) {
         let items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
@@ -1982,7 +2094,8 @@
         }
     });
 
-           function processAndSendImage(file) {
+    function processAndSendImage(file, targetTopic) {
+        const topic = targetTopic || currentTopic;
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
@@ -2001,12 +2114,78 @@
                 ctx.drawImage(img, 0, 0, width, height);
                 
                 const base64Data = canvas.toDataURL('image/jpeg', 0.6); 
-                window.NetworkManager.sendChat(currentTopic, currentUser.nickname, base64Data, 'image', getMySenderRole());
+                window.NetworkManager.sendChat(topic, currentUser.nickname, base64Data, 'image', getMySenderRole());
             }
             img.src = e.target.result;
         }
         reader.readAsDataURL(file);
     }
+
+    // ========================================================================
+    // KÉO-THẢ DI CHUYỂN BẢNG — bấm giữ vào TIÊU ĐỀ (viền trên) của 1 bảng rồi kéo để đặt nó ở vị trí
+    // bất kỳ trên màn hình. Áp dụng cho: các orb-panel bên phải (Bạn Bè, Tiện Ích, Quyền Hạn, Giám Sát,
+    // Danh Sách Người Chơi) và popup chat riêng với từng bạn bè. KHÔNG áp dụng cho khung chat chính
+    // (.chat-sidebar) theo đúng yêu cầu — khung chat luôn cố định ở góc trên-trái.
+    // ========================================================================
+    function makePanelDraggable(panelEl, handleEl, wrapEl) {
+        if (!panelEl || !handleEl || handleEl._dragBound) return;
+        handleEl._dragBound = true;
+        handleEl.classList.add('panel-drag-handle');
+
+        let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+        function onPointerDown(e) {
+            // Bỏ qua nếu bấm vào nút thao tác bên trong tiêu đề (ví dụ nút đóng ✖ nếu có)
+            if (e.target.closest('button, input, select, textarea, .fcp-close')) return;
+            const point = e.touches ? e.touches[0] : e;
+            dragging = true;
+            const rect = panelEl.getBoundingClientRect();
+
+            // Lần đầu kéo: "tách" panel khỏi vị trí bám theo orb, chuyển sang toạ độ cố định tự do
+            // ngay tại vị trí đang hiển thị, để không bị nhảy vị trí đột ngột.
+            panelEl.classList.add('draggable-active', 'being-dragged');
+            if (wrapEl) wrapEl.classList.add('panel-open');
+            panelEl.style.left = rect.left + 'px';
+            panelEl.style.top = rect.top + 'px';
+
+            startX = point.clientX; startY = point.clientY;
+            startLeft = rect.left; startTop = rect.top;
+            e.preventDefault();
+        }
+
+        function onPointerMove(e) {
+            if (!dragging) return;
+            const point = e.touches ? e.touches[0] : e;
+            let newLeft = startLeft + (point.clientX - startX);
+            let newTop = startTop + (point.clientY - startY);
+            // Giữ bảng trong khung nhìn màn hình, không cho kéo mất hẳn ra ngoài
+            const maxLeft = window.innerWidth - 60, maxTop = window.innerHeight - 40;
+            newLeft = Math.max(-panelEl.offsetWidth + 60, Math.min(maxLeft, newLeft));
+            newTop = Math.max(0, Math.min(maxTop, newTop));
+            panelEl.style.left = newLeft + 'px';
+            panelEl.style.top = newTop + 'px';
+        }
+
+        function onPointerUp() {
+            if (!dragging) return;
+            dragging = false;
+            panelEl.classList.remove('being-dragged');
+        }
+
+        handleEl.addEventListener('mousedown', onPointerDown);
+        handleEl.addEventListener('touchstart', onPointerDown, { passive: false });
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('touchmove', onPointerMove, { passive: false });
+        window.addEventListener('mouseup', onPointerUp);
+        window.addEventListener('touchend', onPointerUp);
+    }
+
+    // Áp dụng cho mọi orb-panel đã có sẵn trong trang — tự lấy h4 đầu tiên bên trong làm tay cầm kéo.
+    document.querySelectorAll('.orb-panel').forEach(function (panel) {
+        const handle = panel.querySelector('h4');
+        const wrap = panel.closest('.orb-wrap');
+        if (handle) makePanelDraggable(panel, handle, wrap);
+    });
 
     // ========================================================================
     // ORB PANELS (cột phải) — trượt mượt, tự "lật" thành overlay khi chạm mép trên/dưới màn hình
@@ -2550,20 +2729,47 @@
         popup.innerHTML = `
             <div class="fcp-header"><span>💬 ${escapeHtml(friend.nickname)}</span><span class="fcp-close">✖</span></div>
             <div class="fcp-box"></div>
+            <div class="fcp-emoji-picker">
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('😀')">😀</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('😂')">😂</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('😎')">😎</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('🤡')">🤡</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('💀')">💀</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('🐸')">🐸</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('👀')">👀</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('🔥')">🔥</span>
+                <span onclick="this.closest('.friend-chat-popup')._insertEmoji('❤️')">❤️</span>
+            </div>
             <div class="fcp-controls">
+                <button class="tool-btn fcp-emoji-btn" title="Emoji">😀</button>
+                <button class="tool-btn fcp-img-btn" title="Gửi ảnh">📷</button>
+                <button class="tool-btn fcp-voice-btn" title="Giữ để nói">🎤</button>
+                <input type="file" accept="image/*" style="display:none;" class="fcp-file-input">
                 <input type="text" placeholder="Nhắn tin...">
-                <button class="tool-btn">Gửi</button>
+                <button class="tool-btn fcp-send-btn">Gửi</button>
             </div>`;
         container.appendChild(popup);
 
         const box = popup.querySelector('.fcp-box');
-        const input = popup.querySelector('input');
-        const sendBtn = popup.querySelector('.tool-btn');
+        const input = popup.querySelector('input[type="text"]');
+        const sendBtn = popup.querySelector('.fcp-send-btn');
+        const emojiBtn = popup.querySelector('.fcp-emoji-btn');
+        const emojiPicker = popup.querySelector('.fcp-emoji-picker');
+        const imgBtn = popup.querySelector('.fcp-img-btn');
+        const fileInput = popup.querySelector('.fcp-file-input');
 
-        function appendMsg(sender, text) {
+        popup._insertEmoji = function (emoji) { input.value += emoji; input.focus(); };
+
+        function appendMsg(sender, text, type) {
             const div = document.createElement('div');
             div.className = 'chat-msg';
-            div.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
+            if (type === 'image') {
+                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong><br><img src="${text}" class="chat-img" onclick="window.open(this.src)">`;
+            } else if (type === 'voice') {
+                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong> 🎤 <audio controls src="${text}" style="height:26px; max-width:150px; vertical-align:middle;"></audio>`;
+            } else {
+                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
+            }
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -2576,6 +2782,18 @@
         }
         sendBtn.addEventListener('click', sendDM);
         input.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendDM(); });
+
+        emojiBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('active');
+        });
+        imgBtn.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function (e) {
+            if (e.target.files.length > 0) processAndSendImage(e.target.files[0], topic);
+        });
+
+        setupVoiceRecordButton(popup.querySelector('.fcp-voice-btn'), topic);
+        makePanelDraggable(popup, popup.querySelector('.fcp-header'), null);
 
         popup.querySelector('.fcp-close').addEventListener('click', function () {
             window.NetworkManager.leaveRoom(topic, currentUser.nickname);
@@ -2592,7 +2810,7 @@
     receiveMessage = function (data) {
         if (data.topic && data.topic.indexOf('game4nguoi_2026/dm_') === 0) {
             const entry = Object.values(openFriendPopups).find(p => p.topic === data.topic);
-            if (entry && !data.isSystem) entry.appendMsg(data.sender, data.text);
+            if (entry && !data.isSystem) entry.appendMsg(data.sender, data.text, data.type);
             return;
         }
         _originalReceiveMessage(data);
