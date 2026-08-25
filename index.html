@@ -42,32 +42,34 @@
         .chat-sidebar {
             position: fixed; top: 0; left: 0; z-index: 500;
             flex: none; width: 300px; max-width: 300px; height: 300px;
-            background: rgba(24, 24, 24, 0.50); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.08); border-left: none; border-top: none;
-            border-radius: 0 0 10px 0;
+            background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none;
+            border: none;
             padding: 10px; display: flex; flex-direction: column;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            box-shadow: none;
         }
         .chat-sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .chat-sidebar-header span { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        .chat-collapse-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+        .chat-sidebar-header span { font-size: 12px; color: #ddd; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7); }
+        .chat-collapse-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 14px; padding: 2px 6px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
         .chat-collapse-btn:hover { color: #fff; }
         .chat-sidebar.collapsed { width: 44px; max-width: 44px; height: 44px; overflow: hidden; }
 
         .chat-tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 5px; }
-        .chat-tab { padding: 5px 10px; background: #2a2a2a; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #444; }
-        .chat-tab.active { background: #ff9800; color: #000; font-weight: bold; border-color: #ff9800; }
+        .chat-tab { padding: 5px 10px; background: rgba(20,20,20,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.12); text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .chat-tab.active { background: #ff9800; color: #000; font-weight: bold; border-color: #ff9800; text-shadow: none; }
         .chat-tab .close-btn { color: #f44336; font-weight: bold; cursor: pointer; padding: 0 3px; }
         .chat-tab .close-btn:hover { color: #fff; background: #f44336; border-radius: 50%; }
         .chat-tab .owner-btn { color: #e040fb; font-weight: bold; cursor: pointer; padding: 0 3px; }
         .chat-tab .owner-btn:hover { color: #fff; background: #9c27b0; border-radius: 50%; }
 
-        .chat-box { flex: 1; background: rgba(17, 17, 17, 0.42); padding: 8px; border-radius: 6px; overflow-y: auto; margin-bottom: 8px; font-size: 13px; min-height: 0; }
-        .chat-msg { margin-bottom: 6px; background: rgba(34,34,34,0.75); padding: 6px 8px; border-radius: 6px; word-break: break-word; }
-        .system-msg { color: #ffb74d; font-style: italic; background: rgba(255, 152, 0, 0.08); padding: 5px 6px; border-left: 3px solid #ff9800; }
-        .kick-ban-msg { color: #f44336; font-style: italic; background: rgba(244, 67, 54, 0.08); padding: 5px 6px; border-left: 3px solid #f44336; }
-        .chat-img { max-width: 180px; border-radius: 6px; display: block; margin-top: 4px; cursor: pointer; }
-        .msg-mod-btn { font-size: 10px; color: #f44336; cursor: pointer; margin-left: 6px; text-decoration: underline; }
+        .chat-box { flex: 1; background: transparent; padding: 0; border-radius: 0; overflow-y: auto; margin-bottom: 8px; font-size: 13px; min-height: 0; mask-image: linear-gradient(to bottom, transparent 0, #000 24px); -webkit-mask-image: linear-gradient(to top, transparent 0, #000 24px); }
+        .chat-msg { margin-bottom: 5px; background: transparent; padding: 1px 2px; border-radius: 0; word-break: break-word; color: #f2f2f2; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,1); animation: chatMsgFadeIn 0.18s ease-out; transition: opacity 1.2s ease; }
+        @keyframes chatMsgFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg.chat-msg-old { opacity: 0.28; }
+        .chat-box:hover .chat-msg.chat-msg-old { opacity: 1; }
+        .system-msg { color: #ffcc80; font-style: italic; background: transparent; padding: 1px 2px; border-left: none; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.85); }
+        .kick-ban-msg { color: #ff8a80; font-style: italic; background: transparent; padding: 1px 2px; border-left: none; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.85); }
+        .chat-img { max-width: 180px; border-radius: 6px; display: block; margin-top: 4px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+        .msg-mod-btn { font-size: 10px; color: #ff8a80; cursor: pointer; margin-left: 6px; text-decoration: underline; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
 
         /* Ô chat nhỏ lại chiều cao nhưng rộng ngang hơn theo yêu cầu */
         .chat-controls { display: flex; gap: 5px; position: relative; }
@@ -107,6 +109,24 @@
             position: fixed; inset: 0; z-index: 1; overflow: hidden;
             background: radial-gradient(ellipse at 50% 30%, #1b2a4a 0%, #121212 70%);
         }
+        /* VÙNG CHƠI GAME NHÚNG — thay thế phần "sàn" dưới cùng (giống #hub-stage) khi người chơi bấm
+           chọn 1 game trong CHỌN GAME CHƠI. z-index thấp hơn chat/orb/menu (500+) nên chat và các
+           chức năng bên phải/nút cài đặt vẫn luôn nổi đè lên trên, y như đang ở sảnh chính. */
+        #game-play-area {
+            position: fixed; inset: 0; z-index: 2; overflow: hidden; display: none;
+            background: #000;
+        }
+        #game-play-area.active { display: block; }
+        #game-play-iframe { width: 100%; height: 100%; border: none; display: block; }
+        #btn-exit-game {
+            position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 600;
+            background: rgba(20,20,20,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px;
+            padding: 7px 16px; font-size: 12px; font-weight: bold; cursor: pointer; display: none;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        #btn-exit-game.show { display: block; }
+        #btn-exit-game:hover { background: rgba(244,67,54,0.85); border-color: #f44336; }
         #hub-ground {
             position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
             background: linear-gradient(180deg, #2d4531 0%, #1c2e1f 100%);
@@ -561,6 +581,12 @@
                 <div id="hub-ground"></div>
             </div>
             <div id="hub-hint">Di chuyển: A/D hoặc ◀/▶ · Nhảy: Space hoặc W/▲</div>
+
+            <!-- VÙNG CHƠI GAME NHÚNG — thay thế "sàn" khi chọn 1 game, chat/orb/cài đặt vẫn nổi đè lên -->
+            <div id="game-play-area">
+                <iframe id="game-play-iframe" src="about:blank" allow="autoplay; fullscreen; microphone; gamepad; pointer-lock"></iframe>
+            </div>
+            <button id="btn-exit-game" onclick="exitEmbeddedGame()">✖ Thoát game, về sảnh</button>
 
             <!-- KÊNH CHAT — bên trái, dài -->
             <div class="chat-sidebar" id="chat-sidebar">
@@ -1582,8 +1608,18 @@
     // CHỌN GAME CHƠI — danh sách game riêng biệt (mỗi game 1 file .html độc lập sau này sẽ thêm vào
     // mảng GAME_LIST bên dưới). Hiện tại chưa có game nào -> hiện khu vực trống, không báo lỗi.
     // ========================================================================
+    // ========================================================================
+    // CHỌN GAME CHƠI — mỗi game là 1 THƯ MỤC RIÊNG có file index.html làm cửa vào, đặt trong thư mục
+    // games/ cùng cấp với file index.html chính này. Muốn thêm game mới: chỉ cần thêm 1 dòng {} vào
+    // mảng bên dưới, KHÔNG cần sửa gì khác — hệ thống tự nhúng bằng <iframe>, chat + orb bên phải +
+    // nút Cài Đặt vẫn nổi đè lên trên khi đang chơi.
+    //   name : tên hiện trong danh sách (có thể kèm emoji)
+    //   desc : mô tả ngắn 1 dòng
+    //   file : đường dẫn tới index.html của game đó (tương đối so với file chính này)
+    // ========================================================================
     const GAME_LIST = [
-        // Ví dụ khi có game thật: { name: '🏃 Parkour Sảnh Chờ', desc: 'Mô tả ngắn về game...', file: 'games/parkour.html' }
+        // Ví dụ mẫu — xoá dòng này và thay bằng game thật của bạn:
+        // { name: '🏃 Parkour Sảnh Chờ', desc: 'Vượt chướng ngại vật cùng bạn bè', file: 'games/parkour/index.html' },
     ];
 
     document.getElementById('menu-choose-game').addEventListener('click', function() {
@@ -1599,7 +1635,7 @@
                 row.innerHTML = `<span class="menu-label-v" style="font-size:14px;">${g.name}</span><span style="font-size:11px; color:#999; font-weight:normal;">${g.desc}</span>`;
                 row.addEventListener('click', function () {
                     hideModal('modal-game-select');
-                    window.open(g.file + '?nickname=' + encodeURIComponent(currentUser.nickname) + '&username=' + encodeURIComponent(currentUser.username), '_blank');
+                    playEmbeddedGame(g);
                 });
                 listEl.appendChild(row);
             });
@@ -1607,6 +1643,37 @@
         showModal('modal-game-select');
     });
     document.getElementById('game-select-close').addEventListener('click', function () { hideModal('modal-game-select'); });
+
+    /**
+     * Nhúng game NGAY TRONG trang chính (thay thế "sàn" của sảnh chờ), thay vì mở tab mới.
+     * Chat, các orb bên phải (bạn bè, tiện ích...) và menu Cài Đặt vẫn luôn nổi đè lên trên vì
+     * chúng có z-index cao hơn #game-play-area — người chơi chat/xem bạn bè được ngay trong lúc chơi.
+     */
+    function playEmbeddedGame(g) {
+        // Tạm dừng vòng lặp vật lý + kết nối MQTT của sảnh chờ để đỡ tốn tài nguyên khi đang chơi game khác
+        document.getElementById('hub-stage').style.display = 'none';
+        document.getElementById('hub-hint').classList.remove('show');
+
+        const iframe = document.getElementById('game-play-iframe');
+        const url = g.file + '?nickname=' + encodeURIComponent(currentUser.nickname) + '&username=' + encodeURIComponent(currentUser.username);
+        iframe.src = url;
+
+        document.getElementById('game-play-area').classList.add('active');
+        document.getElementById('btn-exit-game').classList.add('show');
+    }
+
+    /**
+     * Thoát game nhúng, quay lại sảnh chờ (nhân vật hiện lại, chat/orb vẫn giữ nguyên vì
+     * chúng chưa từng bị tắt trong lúc chơi — chỉ có vùng game bị ẩn/hiện).
+     */
+    function exitEmbeddedGame() {
+        const iframe = document.getElementById('game-play-iframe');
+        iframe.src = 'about:blank'; // dừng hẳn game đang chạy trong iframe, giải phóng tài nguyên
+
+        document.getElementById('game-play-area').classList.remove('active');
+        document.getElementById('btn-exit-game').classList.remove('show');
+        document.getElementById('hub-stage').style.display = '';
+    }
 
     // CÀI ĐẶT — mở modal kiểu sidebar trái + nội dung phải (Hồ Sơ Của Tôi / Phím Tắt / Bảng Xếp Hạng / Lịch Sử Trận)
     document.getElementById('menu-settings').addEventListener('click', function() {
@@ -1846,6 +1913,9 @@
                 }
             }
             ui.chatBox.appendChild(div);
+            // Kiểu Bloxd.io: dòng chat tự mờ dần sau 6 giây để không che màn hình game,
+            // di chuột vào khung chat (.chat-box:hover ở CSS) sẽ hiện rõ lại toàn bộ.
+            setTimeout(function () { div.classList.add('chat-msg-old'); }, 6000);
         });
         ui.chatBox.scrollTop = ui.chatBox.scrollHeight;
     }
