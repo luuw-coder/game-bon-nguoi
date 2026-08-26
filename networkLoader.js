@@ -120,7 +120,7 @@
             }
         },
 
-        sendChat: function (topic, sender, content, type = 'text', senderRole = null) {
+        sendChat: function (topic, sender, content, type = 'text', senderRole = null, msgId = null) {
             if (mqttClient && mqttClient.connected) {
                 // Không cho gửi nếu đã bị ban khỏi phòng này (chặn phía client; phòng riêng qua MQTT
                 // công cộng không có bảo mật server-side thật, đây là hàng rào ở mức ứng dụng)
@@ -132,7 +132,10 @@
                     isSystem: false, 
                     type: type,
                     // senderRole: { level, isRootAdmin } — hiển thị badge cấp bậc cạnh tên trong khung chat
-                    senderRole: senderRole
+                    senderRole: senderRole,
+                    // msgId: dùng riêng cho tin nhắn thoại (voice) để người gửi có thể tự xoá / tin
+                    // nhắn tự động vô hiệu hoá sau 30 phút — xem VOICE_TTL_MS ở index.html
+                    msgId: msgId
                 });
                 mqttClient.publish(topic, payload);
             }
