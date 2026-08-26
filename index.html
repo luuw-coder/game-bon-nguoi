@@ -70,6 +70,25 @@
         .kick-ban-msg { color: #ff8a80; font-style: italic; background: transparent; padding: 1px 2px; border-left: none; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.85); }
         .chat-img { max-width: 180px; border-radius: 6px; display: block; margin-top: 4px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
         .msg-mod-btn { font-size: 10px; color: #ff8a80; cursor: pointer; margin-left: 6px; text-decoration: underline; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+        .voice-delete-btn { cursor: pointer; font-size: 12px; margin-left: 4px; opacity: 0.7; }
+        .voice-delete-btn:hover { opacity: 1; transform: scale(1.15); }
+
+        /* Hiệu ứng "sợi dây rung động theo giọng nói" khi đang ghi âm — nổi ngay trên nút mic */
+        .voice-wave-fx {
+            position: fixed; width: 120px; height: 46px; z-index: 700; pointer-events: none;
+            background: rgba(15,15,15,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            border-radius: 10px; border: 1px solid rgba(244,67,54,0.5);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+            animation: voiceWaveFxIn 0.15s ease-out;
+        }
+        @keyframes voiceWaveFxIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .voice-wave-fx svg { width: 100%; height: 100%; }
+        .voice-wave-fx .voice-wave-path { fill: none; stroke: #f44336; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .voice-wave-fx .voice-wave-timer {
+            position: absolute; bottom: 2px; right: 8px; font-size: 10px; color: #ff8a80;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9); font-weight: bold;
+        }
 
         /* Ô chat nhỏ lại chiều cao nhưng rộng ngang hơn theo yêu cầu */
         .chat-controls { display: flex; gap: 5px; position: relative; }
@@ -265,6 +284,12 @@
         .orb-panel .panel-drag-handle { cursor: grab; user-select: none; }
         .orb-panel .panel-drag-handle:active { cursor: grabbing; }
         .orb-panel.being-dragged { transition: none !important; opacity: 0.92 !important; box-shadow: 0 16px 40px rgba(0,0,0,0.7); }
+        /* Nút ✖ nhỏ ở góc tiêu đề — chỉ hiện SAU khi bảng đã được kéo tách ra (xem JS: closeXBtn.style.display) */
+        .panel-detach-close-btn { float: right; cursor: pointer; color: #ff8a80; font-size: 12px; padding: 0 4px; }
+        .panel-detach-close-btn:hover { color: #fff; background: #f44336; border-radius: 50%; }
+        /* Bảng đã tách rời nhưng bị TẮT bằng nút ✖ -> ẩn hẳn khỏi màn hình, giữ nguyên toạ độ để
+           bấm lại orb tương ứng có thể ĐƯA VỀ VỊ TRÍ BAN ĐẦU (resetPanelToOrigin) đúng như trước khi tắt. */
+        .orb-panel.panel-hidden-detached { display: none !important; }
 
         .orb-panel h4 { color: #4fc3f7; font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
 
@@ -1819,6 +1844,10 @@
     }
 
     function receiveMessage(data) {
+        // Gắn mốc thời gian máy này NHẬN được tin nhắn — dùng để tính tin nhắn thoại hết hạn sau 30 phút
+        // (xem VOICE_TTL_MS) và để dòng chat tự mờ dần đúng thứ tự thời gian.
+        data.receivedAt = Date.now();
+
         if (data.type === 'announcement' || data.topic === SYSTEM_ANNOUNCE_TOPIC) {
             document.getElementById('announcement-text').innerText = `[${data.sender}]: ${data.text}`;
             return;
@@ -1907,6 +1936,89 @@
         switchTab(newTab);
     }
 
+    // ========================================================================
+    // QUOTA CHAT GIỌNG NÓI — quy tắc: mỗi tin nhắn thoại có hiệu lực 30 PHÚT rồi tự vô hiệu hoá;
+    // mỗi người tối đa 20 TIN THOẠI CÒN HIỆU LỰC cùng lúc; người dùng có thể tự xoá để giải phóng
+    // quota. Đếm CỤC BỘ trên trình duyệt (localStorage) vì hệ thống không có server trung tâm.
+    // ========================================================================
+    const VOICE_TTL_MS = 30 * 60 * 1000;   // 30 phút hiệu lực
+    const VOICE_QUOTA_MAX = 20;             // tối đa 20 tin thoại còn hiệu lực / người
+    const VOICE_QUOTA_KEY_PREFIX = 'voiceQuota_';
+
+    function getVoiceQuotaList(username) {
+        try {
+            const raw = localStorage.getItem(VOICE_QUOTA_KEY_PREFIX + username);
+            let list = raw ? JSON.parse(raw) : [];
+            const now = Date.now();
+            // Dọn tự động các tin đã hết hạn 30 phút hoặc đã bị người dùng tự xoá
+            list = list.filter(function (item) { return !item.deleted && (now - item.sentAt) < VOICE_TTL_MS; });
+            return list;
+        } catch (e) { return []; }
+    }
+
+    function saveVoiceQuotaList(username, list) {
+        try { localStorage.setItem(VOICE_QUOTA_KEY_PREFIX + username, JSON.stringify(list)); } catch (e) {}
+    }
+
+    function registerVoiceSent(username, msgId) {
+        const list = getVoiceQuotaList(username);
+        list.push({ id: msgId, sentAt: Date.now(), deleted: false });
+        saveVoiceQuotaList(username, list);
+    }
+
+    function markVoiceDeleted(username, msgId) {
+        const list = getVoiceQuotaList(username);
+        const item = list.find(function (x) { return x.id === msgId; });
+        if (item) item.deleted = true;
+        saveVoiceQuotaList(username, list);
+    }
+
+    function canSendMoreVoice(username) {
+        return getVoiceQuotaList(username).length < VOICE_QUOTA_MAX;
+    }
+
+    /**
+     * Hiển thị 1 tin nhắn thoại đúng trạng thái: còn hiệu lực (có audio player), đã hết hạn 30 phút
+     * (báo chữ, không cho phát lại), hoặc đã bị chính người gửi tự xoá. Nếu là tin của MÌNH và còn
+     * hiệu lực -> có thêm nút 🗑️ để tự xoá (giải phóng quota gửi thêm được).
+     */
+    function renderVoiceMessageHtml(msg) {
+        const isMine = currentUser && msg.sender === currentUser.nickname;
+        const sentAt = msg.receivedAt || Date.now();
+        const ageMs = Date.now() - sentAt;
+
+        if (msg.voiceDeletedLocally || (msg.msgId && isMine && isVoiceMarkedDeleted(msg.msgId))) {
+            return '🎤 <em style="opacity:0.6;">(tin nhắn thoại đã bị xoá)</em>';
+        }
+        if (ageMs >= VOICE_TTL_MS) {
+            return '🎤 <em style="opacity:0.6;">(tin nhắn thoại đã hết hạn sau 30 phút)</em>';
+        }
+
+        const deleteBtn = (isMine && msg.msgId)
+            ? ` <span class="voice-delete-btn" title="Xoá tin nhắn thoại này" onclick="deleteVoiceMessageInChat('${msg.msgId}', this)">🗑️</span>`
+            : '';
+        return `🎤 <audio controls src="${msg.text}" style="height:28px; max-width:200px; vertical-align:middle;"></audio>${deleteBtn}`;
+    }
+
+    function isVoiceMarkedDeleted(msgId) {
+        const list = getVoiceQuotaList(currentUser.username);
+        // getVoiceQuotaList đã tự lọc bỏ mục deleted=true, nên nếu msgId KHÔNG còn trong danh sách
+        // (mà trước đó đã từng được registerVoiceSent) nghĩa là nó đã bị xoá hoặc hết hạn.
+        return !list.find(function (x) { return x.id === msgId; });
+    }
+
+    // Gọi từ nút 🗑️ trong khung chat chính hoặc popup DM để tự xoá tin nhắn thoại của mình.
+    window.deleteVoiceMessageInChat = function (msgId, btnEl) {
+        if (!confirm('Xoá tin nhắn thoại này? Sẽ không thể phát lại được nữa.')) return;
+        markVoiceDeleted(currentUser.username, msgId);
+        // Đánh dấu trực tiếp trong dữ liệu đang giữ ở bộ nhớ để render lại đúng ngay, không cần chờ mạng
+        Object.keys(messagesDB).forEach(function (topic) {
+            (messagesDB[topic] || []).forEach(function (m) { if (m.msgId === msgId) m.voiceDeletedLocally = true; });
+        });
+        renderChatBox();
+        Object.values(openFriendPopups).forEach(function (p) { if (p.rerender) p.rerender(); });
+    };
+
     function renderChatBox() {
         ui.chatBox.innerHTML = '';
         const msgs = messagesDB[currentTopic] || [];
@@ -1931,7 +2043,7 @@
                 if (msg.type === 'image') {
                     div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
                 } else if (msg.type === 'voice') {
-                    div.innerHTML = `${namePrefix} 🎤 <audio controls src="${msg.text}" style="height:28px; max-width:200px; vertical-align:middle;"></audio>`;
+                    div.innerHTML = `${namePrefix} ${renderVoiceMessageHtml(msg)}`;
                 } else {
                     div.innerHTML = `${namePrefix} ${escapeHtml(msg.text)}`;
                 }
@@ -1978,12 +2090,25 @@
     }
 
     // ========================================================================
-    // CHAT GIỌNG NÓI — bấm GIỮ nút 🎤 để ghi âm, THẢ ra để gửi ngay (kiểu voice message
-    // của Messenger/Zalo/WeChat). Vì hệ thống không có backend lưu file, đoạn ghi âm được
-    // mã hoá base64 rồi gửi thẳng qua MQTT như ảnh — GIỚI HẠN TỐI ĐA 20 GIÂY để tránh tin
-    // nhắn quá nặng làm treo hoặc bị MQTT từ chối.
+    // CHAT GIỌNG NÓI — BẤM 1 LẦN để bắt đầu ghi, BẤM LẦN NỮA để dừng và gửi ngay.
+    // Quy tắc: ghi tối đa 40 GIÂY; mỗi tin nhắn thoại đã gửi có hiệu lực 30 PHÚT rồi tự vô hiệu hoá
+    // (không phát lại được nữa); mỗi người chỉ được tối đa 20 TIN THOẠI CÒN HIỆU LỰC cùng lúc — hết
+    // quota thì báo lỗi, không cho ghi thêm; người dùng có thể TỰ XOÁ tin thoại của mình để giải
+    // phóng quota, ghi thêm được ngay. Quota được đếm CỤC BỘ trên trình duyệt (localStorage) vì hệ
+    // thống không có server trung tâm để tính chung cho mọi máy.
     // ========================================================================
-    const VOICE_MAX_SECONDS = 20;
+    const VOICE_MAX_SECONDS = 40;
+
+    // Ưu tiên các định dạng dung lượng thấp mà nhiều trình duyệt hỗ trợ ghi ĐƯỢC và phát LẠI được;
+    // 'audio/webm;codecs=opus' cho dung lượng nhỏ nhất nhưng Safari không hỗ trợ ghi -> có phương án dự phòng.
+    const VOICE_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+    function pickVoiceMimeType() {
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+        for (let i = 0; i < VOICE_MIME_CANDIDATES.length; i++) {
+            if (MediaRecorder.isTypeSupported(VOICE_MIME_CANDIDATES[i])) return VOICE_MIME_CANDIDATES[i];
+        }
+        return '';
+    }
 
     function setupVoiceRecordButton(btnEl, targetTopicOrGetter) {
         if (!btnEl) return;
@@ -1991,39 +2116,123 @@
         let audioChunks = [];
         let recordStream = null;
         let maxTimer = null;
+        let waveTimer = null;
         let isRecording = false;
-        let cancelled = false;
+        let isRequesting = false; // đang chờ trình duyệt hỏi quyền micro (tránh bấm chồng)
+        let waveEl = null, audioCtx = null, analyser = null;
 
         function getTopic() {
             return (typeof targetTopicOrGetter === 'function') ? targetTopicOrGetter() : targetTopicOrGetter;
         }
 
-        function startRecording(e) {
-            if (e) e.preventDefault();
-            if (isRecording) return;
+        // Hiệu ứng "sợi dây rung động theo giọng nói" — nổi ngay trên nút mic khi đang ghi,
+        // biên độ dây thay đổi theo âm lượng thực tế đo được từ micro (Web Audio API).
+        function createWaveEffect(stream) {
+            waveEl = document.createElement('div');
+            waveEl.className = 'voice-wave-fx';
+            waveEl.innerHTML = '<svg viewBox="0 0 120 40" preserveAspectRatio="none"><path class="voice-wave-path" d="M0,20 L120,20"/></svg><span class="voice-wave-timer">0s</span>';
+            document.body.appendChild(waveEl);
+
+            const rect = btnEl.getBoundingClientRect();
+            waveEl.style.left = (rect.left + rect.width / 2 - 60) + 'px';
+            waveEl.style.top = (rect.top - 46) + 'px';
+
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                const pathEl = waveEl.querySelector('.voice-wave-path');
+                const startedAt = Date.now();
+                const timerEl = waveEl.querySelector('.voice-wave-timer');
+
+                function drawFrame() {
+                    if (!analyser) return; // đã dừng ghi -> ngưng vẽ
+                    analyser.getByteTimeDomainData(dataArray);
+                    let points = 'M0,20 ';
+                    const step = Math.floor(dataArray.length / 24);
+                    for (let i = 0, x = 0; i < dataArray.length; i += step, x += 5) {
+                        const v = (dataArray[i] - 128) / 128; // -1..1
+                        const y = 20 + v * 16;
+                        points += `L${x},${y.toFixed(1)} `;
+                    }
+                    pathEl.setAttribute('d', points);
+                    timerEl.innerText = Math.min(VOICE_MAX_SECONDS, Math.floor((Date.now() - startedAt) / 1000)) + 's';
+                    waveTimer = requestAnimationFrame(drawFrame);
+                }
+                drawFrame();
+            } catch (err) {
+                console.error('Không khởi tạo được hiệu ứng sóng âm:', err);
+            }
+        }
+
+        function removeWaveEffect() {
+            if (waveTimer) cancelAnimationFrame(waveTimer);
+            waveTimer = null;
+            if (analyser) analyser = null;
+            if (audioCtx) { audioCtx.close().catch(function () {}); audioCtx = null; }
+            if (waveEl) { waveEl.remove(); waveEl = null; }
+        }
+
+        function startRecording() {
+            if (isRecording || isRequesting) return;
+
+            // Kiểm tra quota TRƯỚC khi xin quyền micro, để không làm phiền người dùng nếu đã hết lượt.
+            if (!canSendMoreVoice(currentUser.username)) {
+                alert(`⚠️ Bạn đã dùng hết ${VOICE_QUOTA_MAX} tin nhắn thoại đang còn hiệu lực (mỗi tin tự hết hạn sau 30 phút). Hãy đợi tin cũ hết hạn, hoặc tự xoá bớt tin thoại của bạn trong khung chat để ghi âm tiếp.`);
+                return;
+            }
+
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 alert('⚠️ Trình duyệt này không hỗ trợ ghi âm (cần HTTPS + trình duyệt hiện đại).');
                 return;
             }
-            cancelled = false;
+            isRequesting = true;
             navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+                isRequesting = false;
                 recordStream = stream;
                 audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream);
+                const mimeType = pickVoiceMimeType();
+                try {
+                    // Bitrate thấp (16kbps, đủ nghe rõ giọng nói) để 40 giây ghi âm vẫn giữ dung lượng
+                    // vừa phải, tránh bị broker MQTT công cộng cắt/từ chối khi gửi.
+                    mediaRecorder = mimeType
+                        ? new MediaRecorder(stream, { mimeType: mimeType, audioBitsPerSecond: 16000 })
+                        : new MediaRecorder(stream);
+                } catch (err) {
+                    console.error('Không tạo được MediaRecorder:', err);
+                    stream.getTracks().forEach(function (t) { t.stop(); });
+                    alert('⚠️ Trình duyệt không hỗ trợ định dạng ghi âm nào tương thích.');
+                    return;
+                }
                 mediaRecorder.ondataavailable = function (ev) { if (ev.data.size > 0) audioChunks.push(ev.data); };
                 mediaRecorder.onstop = function () {
                     recordStream.getTracks().forEach(function (t) { t.stop(); });
                     clearTimeout(maxTimer);
+                    removeWaveEffect();
                     btnEl.classList.remove('recording');
+                    btnEl.innerHTML = '🎙️';
                     isRecording = false;
-                    if (cancelled || audioChunks.length === 0) return;
 
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    if (audioChunks.length === 0) return;
+                    const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+                    const blob = new Blob(audioChunks, { type: finalMime });
+
+                    // Cảnh báo sớm nếu file quá nặng — MQTT công cộng dễ từ chối/cắt gói tin lớn,
+                    // đây chính là nguyên nhân voice gửi đi nhưng không nghe được gì.
+                    if (blob.size > 400000) {
+                        alert('⚠️ Đoạn ghi âm hơi dài/nặng, có thể gửi không trọn vẹn qua mạng chat. Hãy thử nói ngắn hơn.');
+                    }
+
+                    const msgId = 'v_' + Date.now() + '_' + Math.random().toString(16).slice(2, 8);
                     const reader = new FileReader();
                     reader.onload = function () {
                         const topic = getTopic();
                         if (topic) {
-                            window.NetworkManager.sendChat(topic, currentUser.nickname, reader.result, 'voice', getMySenderRole());
+                            window.NetworkManager.sendChat(topic, currentUser.nickname, reader.result, 'voice', getMySenderRole(), msgId);
+                            registerVoiceSent(currentUser.username, msgId);
                         }
                     };
                     reader.readAsDataURL(blob);
@@ -2031,34 +2240,27 @@
                 mediaRecorder.start();
                 isRecording = true;
                 btnEl.classList.add('recording');
+                btnEl.innerHTML = '⏹️';
+                createWaveEffect(stream);
                 maxTimer = setTimeout(function () { if (isRecording) stopRecording(); }, VOICE_MAX_SECONDS * 1000);
             }).catch(function (err) {
+                isRequesting = false;
                 console.error('Không thể truy cập micro:', err);
-                alert('⚠️ Không thể truy cập micro. Hãy kiểm tra quyền micro của trình duyệt cho trang web này.');
+                alert('⚠️ Không thể truy cập micro. Hãy kiểm tra quyền micro của trình duyệt cho trang web này (và đảm bảo web đang chạy HTTPS).');
             });
         }
 
-        function stopRecording(e) {
-            if (e) e.preventDefault();
+        function stopRecording() {
             if (!isRecording || !mediaRecorder) return;
             mediaRecorder.stop();
         }
 
-        function cancelRecording() {
-            if (!isRecording) return;
-            cancelled = true;
-            stopRecording();
-        }
-
-        // Chuột: giữ để ghi, thả để gửi. Rời khỏi nút trong lúc giữ chuột -> huỷ (không gửi).
-        btnEl.addEventListener('mousedown', startRecording);
-        window.addEventListener('mouseup', function () { if (isRecording) stopRecording(); });
-        btnEl.addEventListener('mouseleave', function (e) { if (isRecording && e.buttons !== 1) cancelRecording(); });
-
-        // Cảm ứng (điện thoại/máy tính bảng): chạm giữ để ghi, nhấc tay để gửi.
-        btnEl.addEventListener('touchstart', startRecording, { passive: false });
-        btnEl.addEventListener('touchend', stopRecording);
-        btnEl.addEventListener('touchcancel', cancelRecording);
+        // BẤM 1 LẦN để bắt đầu, BẤM LẦN NỮA để dừng và gửi — không dùng kiểu giữ nút nữa.
+        btnEl.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (isRecording) stopRecording();
+            else startRecording();
+        });
     }
 
     // EMOJI VÀ UP ẢNH
@@ -2126,17 +2328,47 @@
     // bất kỳ trên màn hình. Áp dụng cho: các orb-panel bên phải (Bạn Bè, Tiện Ích, Quyền Hạn, Giám Sát,
     // Danh Sách Người Chơi) và popup chat riêng với từng bạn bè. KHÔNG áp dụng cho khung chat chính
     // (.chat-sidebar) theo đúng yêu cầu — khung chat luôn cố định ở góc trên-trái.
+    //
+    // Sau khi kéo, bảng chuyển sang "tách rời" (panel-detached trên orb-wrap) — không còn tự đóng
+    // theo hover/bấm-ra-ngoài như trước nữa (đây là lỗi đã sửa: trước đó bảng bị ẩn mất khi mở bảng
+    // khác hoặc bấm ra ngoài). Góc trên tiêu đề có nút ✖ để TẮT (ẩn) bảng; bấm lại orb tương ứng sẽ
+    // ĐƯA BẢNG VỀ ĐÚNG VỊ TRÍ BAN ĐẦU và khôi phục hành vi hover/mở-đóng như lúc đầu.
     // ========================================================================
+    function resetPanelToOrigin(panelEl, wrapEl) {
+        panelEl.classList.remove('draggable-active', 'being-dragged', 'panel-hidden-detached');
+        panelEl.style.left = '';
+        panelEl.style.top = '';
+        if (wrapEl) {
+            wrapEl.classList.remove('panel-detached', 'panel-open');
+        }
+    }
+
     function makePanelDraggable(panelEl, handleEl, wrapEl) {
         if (!panelEl || !handleEl || handleEl._dragBound) return;
         handleEl._dragBound = true;
         handleEl.classList.add('panel-drag-handle');
 
+        // Nút ✖ để tắt bảng khi đang ở chế độ tách rời — tự thêm vào cuối tiêu đề.
+        const closeXBtn = document.createElement('span');
+        closeXBtn.className = 'panel-detach-close-btn';
+        closeXBtn.title = 'Tắt bảng này (bấm lại vào biểu tượng tương ứng để bật lại ở vị trí ban đầu)';
+        closeXBtn.innerText = '✖';
+        closeXBtn.style.display = 'none';
+        handleEl.appendChild(closeXBtn);
+        closeXBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (wrapEl) {
+                // Popup chat bạn bè (wrapEl null) dùng nút .fcp-close riêng, không qua đây.
+                panelEl.classList.add('panel-hidden-detached');
+            } else {
+                panelEl.style.display = 'none'; // popup không có wrap -> tự ẩn thẳng
+            }
+        });
+
         let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
 
         function onPointerDown(e) {
-            // Bỏ qua nếu bấm vào nút thao tác bên trong tiêu đề (ví dụ nút đóng ✖ nếu có)
-            if (e.target.closest('button, input, select, textarea, .fcp-close')) return;
+            if (e.target.closest('.panel-detach-close-btn, input, select, textarea, .fcp-close')) return;
             const point = e.touches ? e.touches[0] : e;
             dragging = true;
             const rect = panelEl.getBoundingClientRect();
@@ -2144,7 +2376,9 @@
             // Lần đầu kéo: "tách" panel khỏi vị trí bám theo orb, chuyển sang toạ độ cố định tự do
             // ngay tại vị trí đang hiển thị, để không bị nhảy vị trí đột ngột.
             panelEl.classList.add('draggable-active', 'being-dragged');
-            if (wrapEl) wrapEl.classList.add('panel-open');
+            panelEl.classList.remove('panel-hidden-detached');
+            if (wrapEl) wrapEl.classList.add('panel-open', 'panel-detached');
+            closeXBtn.style.display = 'inline-block';
             panelEl.style.left = rect.left + 'px';
             panelEl.style.top = rect.top + 'px';
 
@@ -2209,19 +2443,25 @@
         }
 
         wrap.addEventListener('mouseenter', function () {
-            document.querySelectorAll('.orb-wrap.panel-open').forEach(w => { if (w !== wrap) w.classList.remove('panel-open'); });
+            if (wrap.classList.contains('panel-detached')) return; // panel đã kéo ra ngoài -> không còn theo hành vi hover nữa
+            document.querySelectorAll('.orb-wrap.panel-open:not(.panel-detached)').forEach(w => { if (w !== wrap) w.classList.remove('panel-open'); });
             positionPanel();
         });
         orb.addEventListener('click', function () {
+            if (wrap.classList.contains('panel-detached')) {
+                // Panel đã bị kéo ra ngoài -> bấm orb sẽ ĐƯA VỀ VỊ TRÍ BAN ĐẦU thay vì mở/đóng như thường
+                resetPanelToOrigin(wrap.querySelector('.orb-panel'), wrap);
+                return;
+            }
             const isOpen = wrap.classList.toggle('panel-open');
-            document.querySelectorAll('.orb-wrap.panel-open').forEach(w => { if (w !== wrap) w.classList.remove('panel-open'); });
+            document.querySelectorAll('.orb-wrap.panel-open:not(.panel-detached)').forEach(w => { if (w !== wrap) w.classList.remove('panel-open'); });
             if (isOpen) positionPanel();
         });
     });
-    // Bấm ra ngoài để đóng orb đang pin (trên thiết bị cảm ứng/không hover)
+    // Bấm ra ngoài để đóng orb đang pin (trên thiết bị cảm ứng/không hover) — không áp dụng cho panel đã kéo ra ngoài
     document.addEventListener('click', function (e) {
-        if (!e.target.closest('.orb-wrap')) {
-            document.querySelectorAll('.orb-wrap.panel-open').forEach(w => w.classList.remove('panel-open'));
+        if (!e.target.closest('.orb-wrap') && !e.target.closest('.orb-panel')) {
+            document.querySelectorAll('.orb-wrap.panel-open:not(.panel-detached)').forEach(w => w.classList.remove('panel-open'));
         }
     });
 
@@ -2760,18 +3000,28 @@
 
         popup._insertEmoji = function (emoji) { input.value += emoji; input.focus(); };
 
-        function appendMsg(sender, text, type) {
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            if (type === 'image') {
-                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong><br><img src="${text}" class="chat-img" onclick="window.open(this.src)">`;
-            } else if (type === 'voice') {
-                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong> 🎤 <audio controls src="${text}" style="height:26px; max-width:150px; vertical-align:middle;"></audio>`;
-            } else {
-                div.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
-            }
-            box.appendChild(div);
+        const dmMessages = [];
+
+        function renderDmBox() {
+            box.innerHTML = '';
+            dmMessages.forEach(function (m) {
+                const div = document.createElement('div');
+                div.className = 'chat-msg';
+                if (m.type === 'image') {
+                    div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong><br><img src="${m.text}" class="chat-img" onclick="window.open(this.src)">`;
+                } else if (m.type === 'voice') {
+                    div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong> ${renderVoiceMessageHtml(m)}`;
+                } else {
+                    div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong> ${escapeHtml(m.text)}`;
+                }
+                box.appendChild(div);
+            });
             box.scrollTop = box.scrollHeight;
+        }
+
+        function appendMsg(sender, text, type, msgId) {
+            dmMessages.push({ sender: sender, text: text, type: type, msgId: msgId, receivedAt: Date.now() });
+            renderDmBox();
         }
 
         function sendDM() {
@@ -2802,7 +3052,7 @@
         });
 
         window.NetworkManager.joinRoom(topic, currentUser.nickname, false);
-        openFriendPopups[friend.username] = { el: popup, topic: topic, appendMsg: appendMsg };
+        openFriendPopups[friend.username] = { el: popup, topic: topic, appendMsg: appendMsg, rerender: renderDmBox };
     }
 
     // Hook vào receiveMessage hiện có: tin nhắn từ topic dm_ sẽ được route tới popup tương ứng thay vì khung chat chính
@@ -2810,11 +3060,21 @@
     receiveMessage = function (data) {
         if (data.topic && data.topic.indexOf('game4nguoi_2026/dm_') === 0) {
             const entry = Object.values(openFriendPopups).find(p => p.topic === data.topic);
-            if (entry && !data.isSystem) entry.appendMsg(data.sender, data.text, data.type);
+            if (entry && !data.isSystem) entry.appendMsg(data.sender, data.text, data.type, data.msgId);
             return;
         }
         _originalReceiveMessage(data);
     };
+
+    // Tự động vẽ lại khung chat mỗi phút để tin nhắn thoại tự ẩn đúng lúc hết hạn 30 phút,
+    // kể cả khi không có tin nhắn mới nào khác đến để kích hoạt việc vẽ lại.
+    setInterval(function () {
+        if ((messagesDB[currentTopic] || []).some(function (m) { return m.type === 'voice'; })) {
+            renderChatBox();
+        }
+        Object.values(openFriendPopups).forEach(function (p) { if (p.rerender) p.rerender(); });
+    }, 60000);
+
 
     // ========================================================================
     // PHÍM TẮT — gán trong Cài Đặt, xử lý toàn cục
