@@ -1885,6 +1885,15 @@
             return;
         }
 
+        // Đồng bộ XOÁ TIN NHẮN THOẠI cho MỌI NGƯỜI trong phòng — đây là phần sửa lỗi "xoá bên tôi
+        // rồi nhưng người khác vẫn còn nghe được": trước đó xoá chỉ tác động cục bộ, giờ mọi máy
+        // nhận được tín hiệu voice_delete này sẽ tự ẩn đúng tin nhắn theo msgId, kể cả người đã tải
+        // sẵn file audio về máy trước đó.
+        if (data.type === 'voice_delete') {
+            applyVoiceDeleteEverywhere(data.msgId);
+            return; // không lưu tín hiệu này vào lịch sử chat, nó không phải nội dung hiển thị
+        }
+
         if (!messagesDB[data.topic]) messagesDB[data.topic] = [];
         messagesDB[data.topic].push(data);
         if (data.topic === currentTopic) renderChatBox();
@@ -1982,7 +1991,7 @@
      * (báo chữ, không cho phát lại), hoặc đã bị chính người gửi tự xoá. Nếu là tin của MÌNH và còn
      * hiệu lực -> có thêm nút 🗑️ để tự xoá (giải phóng quota gửi thêm được).
      */
-    function renderVoiceMessageHtml(msg) {
+    function renderVoiceMessageHtml(msg, topic) {
         const isMine = currentUser && msg.sender === currentUser.nickname;
         const sentAt = msg.receivedAt || Date.now();
         const ageMs = Date.now() - sentAt;
@@ -1994,8 +2003,8 @@
             return '🎤 <em style="opacity:0.6;">(tin nhắn thoại đã hết hạn sau 30 phút)</em>';
         }
 
-        const deleteBtn = (isMine && msg.msgId)
-            ? ` <span class="voice-delete-btn" title="Xoá tin nhắn thoại này" onclick="deleteVoiceMessageInChat('${msg.msgId}', this)">🗑️</span>`
+        const deleteBtn = (isMine && msg.msgId && topic)
+            ? ` <span class="voice-delete-btn" title="Xoá tin nhắn thoại này (mọi người trong phòng sẽ không nghe được nữa)" onclick="deleteVoiceMessageInChat('${msg.msgId}', '${topic.replace(/'/g, "\\'")}')">🗑️</span>`
             : '';
         return `🎤 <audio controls src="${msg.text}" style="height:28px; max-width:200px; vertical-align:middle;"></audio>${deleteBtn}`;
     }
@@ -2008,16 +2017,35 @@
     }
 
     // Gọi từ nút 🗑️ trong khung chat chính hoặc popup DM để tự xoá tin nhắn thoại của mình.
-    window.deleteVoiceMessageInChat = function (msgId, btnEl) {
-        if (!confirm('Xoá tin nhắn thoại này? Sẽ không thể phát lại được nữa.')) return;
+    // topic: BẮT BUỘC — cần để gửi thông báo xoá cho MỌI NGƯỜI khác trong đúng phòng đó, không chỉ
+    // ẩn ở máy mình (đây là phần đã sửa: trước đó chỉ xoá cục bộ nên người khác vẫn nghe được).
+    window.deleteVoiceMessageInChat = function (msgId, topic) {
+        if (!confirm('Xoá tin nhắn thoại này? Sẽ không thể phát lại được nữa (kể cả với người khác trong phòng).')) return;
+
+        // 1. Giải phóng quota của chính mình
         markVoiceDeleted(currentUser.username, msgId);
-        // Đánh dấu trực tiếp trong dữ liệu đang giữ ở bộ nhớ để render lại đúng ngay, không cần chờ mạng
+
+        // 2. Đánh dấu xoá ngay tại máy mình để render lại tức thì, không cần chờ mạng
+        applyVoiceDeleteEverywhere(msgId);
+
+        // 3. QUAN TRỌNG: báo cho MỌI NGƯỜI ĐANG TRONG PHÒNG biết để họ cũng tự ẩn tin nhắn này —
+        // nếu thiếu bước này thì chỉ máy mình xoá được, máy khác vẫn còn nghe bình thường.
+        window.NetworkManager.broadcastVoiceDelete(topic, currentUser.nickname, msgId);
+    };
+
+    // Đánh dấu 1 tin nhắn thoại là đã bị xoá trong TOÀN BỘ dữ liệu đang giữ ở bộ nhớ (khung chat
+    // chính lẫn mọi popup chat riêng đang mở), rồi vẽ lại để cập nhật giao diện ngay lập tức.
+    // Dùng chung cho cả trường hợp TỰ xoá và trường hợp NHẬN được thông báo xoá từ người khác.
+    function applyVoiceDeleteEverywhere(msgId) {
         Object.keys(messagesDB).forEach(function (topic) {
             (messagesDB[topic] || []).forEach(function (m) { if (m.msgId === msgId) m.voiceDeletedLocally = true; });
         });
         renderChatBox();
-        Object.values(openFriendPopups).forEach(function (p) { if (p.rerender) p.rerender(); });
-    };
+        Object.values(openFriendPopups).forEach(function (p) {
+            if (p.markDeleted) p.markDeleted(msgId);
+            else if (p.rerender) p.rerender();
+        });
+    }
 
     function renderChatBox() {
         ui.chatBox.innerHTML = '';
@@ -2043,7 +2071,7 @@
                 if (msg.type === 'image') {
                     div.innerHTML = `${namePrefix} <br><img src="${msg.text}" class="chat-img" onclick="window.open(this.src)">`;
                 } else if (msg.type === 'voice') {
-                    div.innerHTML = `${namePrefix} ${renderVoiceMessageHtml(msg)}`;
+                    div.innerHTML = `${namePrefix} ${renderVoiceMessageHtml(msg, currentTopic)}`;
                 } else {
                     div.innerHTML = `${namePrefix} ${escapeHtml(msg.text)}`;
                 }
@@ -3010,7 +3038,7 @@
                 if (m.type === 'image') {
                     div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong><br><img src="${m.text}" class="chat-img" onclick="window.open(this.src)">`;
                 } else if (m.type === 'voice') {
-                    div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong> ${renderVoiceMessageHtml(m)}`;
+                    div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong> ${renderVoiceMessageHtml(m, topic)}`;
                 } else {
                     div.innerHTML = `<strong>${escapeHtml(m.sender)}:</strong> ${escapeHtml(m.text)}`;
                 }
@@ -3021,6 +3049,13 @@
 
         function appendMsg(sender, text, type, msgId) {
             dmMessages.push({ sender: sender, text: text, type: type, msgId: msgId, receivedAt: Date.now() });
+            renderDmBox();
+        }
+
+        // Đánh dấu 1 tin nhắn thoại trong popup DM này là đã bị xoá (gọi từ applyVoiceDeleteEverywhere
+        // khi tự xoá HOẶC khi nhận được tín hiệu voice_delete từ người kia) rồi vẽ lại ngay.
+        function markDeleted(msgId) {
+            dmMessages.forEach(function (m) { if (m.msgId === msgId) m.voiceDeletedLocally = true; });
             renderDmBox();
         }
 
@@ -3052,7 +3087,7 @@
         });
 
         window.NetworkManager.joinRoom(topic, currentUser.nickname, false);
-        openFriendPopups[friend.username] = { el: popup, topic: topic, appendMsg: appendMsg, rerender: renderDmBox };
+        openFriendPopups[friend.username] = { el: popup, topic: topic, appendMsg: appendMsg, rerender: renderDmBox, markDeleted: markDeleted };
     }
 
     // Hook vào receiveMessage hiện có: tin nhắn từ topic dm_ sẽ được route tới popup tương ứng thay vì khung chat chính
