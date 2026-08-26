@@ -142,6 +142,23 @@
         },
 
         /**
+         * BÁO CHO MỌI NGƯỜI trong phòng biết 1 tin nhắn thoại (theo msgId) vừa bị chính người gửi
+         * tự xoá — mọi máy đang mở phòng này (kể cả người đã tải sẵn file audio về máy) sẽ tự ẩn
+         * tin nhắn đó ngay, không phát lại được nữa. Đây là điểm khác với chỉ xoá cục bộ: xoá cục bộ
+         * chỉ ẩn ở máy người xoá, KHÔNG đồng bộ sang máy khác — đó chính là lỗi cần sửa.
+         */
+        broadcastVoiceDelete: function (topic, actorNickname, msgId) {
+            if (!mqttClient || !mqttClient.connected) return;
+            mqttClient.publish(topic, JSON.stringify({
+                sender: actorNickname,
+                text: '',
+                isSystem: true,
+                type: 'voice_delete',
+                msgId: msgId
+            }));
+        },
+
+        /**
          * KICK / BAN người khác khỏi phòng riêng. Chỉ có tác dụng khi máy gọi hàm này đang là
          * chủ phòng đã biết (roomOwners[topic] === myNickname) — kiểm tra thật ở index.html trước
          * khi gọi. permanent=true => ban (chặn gửi chat + tự leave), false => chỉ kick 1 lần (mời ra).
